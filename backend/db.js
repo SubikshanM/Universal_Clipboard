@@ -2,14 +2,38 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Create a connection pool using environment variables
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+// Configuration object for the connection pool
+let poolConfig = {};
+
+// --- FIX START ---
+// 1. Prioritize the standard DATABASE_URL environment variable (used by Render/Neon).
+if (process.env.DATABASE_URL) {
+    // The pg module can accept the full URL string directly as connectionString.
+    poolConfig = {
+        connectionString: process.env.DATABASE_URL,
+        // Since Neon requires SSL, we explicitly add the SSL config for safety,
+        // though the connection string itself usually covers it.
+        ssl: {
+            rejectUnauthorized: false 
+        }
+    };
+    console.log('Using DATABASE_URL for PostgreSQL connection.');
+
+} else {
+    // 2. Fallback to separate variables for local development (if DATABASE_URL is not set).
+    poolConfig = {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD,
+      port: process.env.DB_PORT,
+    };
+    console.log('Using separate environment variables for PostgreSQL connection.');
+}
+// --- FIX END ---
+
+// Create a connection pool using the determined configuration
+const pool = new Pool(poolConfig);
 
 // Test the connection when the module loads
 pool.connect((err, client, release) => {
