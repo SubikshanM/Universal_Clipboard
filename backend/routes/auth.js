@@ -95,3 +95,29 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+
+// -----------------------
+// Development helper: decode/verify a Bearer token
+// Enable by setting DEBUG_TOKEN=true in the environment (do NOT enable permanently in public apps)
+if (process.env.DEBUG_TOKEN === 'true') {
+    router.get('/debug-token', (req, res) => {
+        const authHeader = req.header('Authorization') || '';
+        const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+        if (!token) return res.status(400).json({ error: 'No token provided in Authorization header' });
+
+        try {
+            // Don't rely solely on decode — show both decode and verification attempt
+            const decoded = jwt.decode(token, { complete: true });
+            let verifyResult = null;
+            try {
+                verifyResult = jwt.verify(token, process.env.JWT_SECRET || '');
+            } catch (e) {
+                verifyResult = { verifyError: e.message };
+            }
+
+            return res.status(200).json({ decoded, verifyResult });
+        } catch (err) {
+            return res.status(400).json({ error: 'Invalid token format', detail: err.message });
+        }
+    });
+}

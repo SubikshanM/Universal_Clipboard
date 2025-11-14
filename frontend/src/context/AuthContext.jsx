@@ -9,8 +9,11 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Base URL for your Node.js Backend API
-const API_URL = 'http://localhost:5000/api/auth';
+// Base URL for your Node.js Backend API (use hosted backend by default)
+// Vite exposes env vars via import.meta.env.VITE_... in the browser; avoid using process.env directly.
+const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : 'https://universal-clipboard-q6po.onrender.com/api/auth';
 
 // 3. The Provider Component
 export const AuthProvider = ({ children }) => {

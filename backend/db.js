@@ -22,18 +22,33 @@ if (process.env.DATABASE_URL) {
 } else {
     // 2. Fallback to separate variables for local development (if DATABASE_URL is not set).
     poolConfig = {
-      user: process.env.DB_USER,
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      password: process.env.DB_PASSWORD,
-      port: process.env.DB_PORT,
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        password: process.env.DB_PASSWORD,
+        port: process.env.DB_PORT,
     };
     console.log('Using separate environment variables for PostgreSQL connection.');
 }
 // --- FIX END ---
 
 // Create a connection pool using the determined configuration
-const pool = new Pool(poolConfig);
+let pool;
+if (process.env.DATABASE_URL) {
+  // When using a hosted provider the connection string often requires SSL.
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+} else {
+  pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+  });
+}
 
 // Test the connection when the module loads
 pool.connect((err, client, release) => {
@@ -58,7 +73,7 @@ async function createTables() {
   const createUsers = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
-      username VARCHAR(50) UNIQUE NOT NULL,
+      username VARCHAR(50) UNIQUE,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -72,7 +87,8 @@ async function createTables() {
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       encrypted_data TEXT NOT NULL,
       ttl_seconds INTEGER DEFAULT 3600,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      expiration_time TIMESTAMP WITH TIME ZONE
     );
   `;
 

@@ -12,7 +12,8 @@ const MAX_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 // 1. Save Clip Route (PUSH Operation)
 router.post('/save', auth, async (req, res) => {
     const userId = req.user.id;
-    const { encrypted_content, expiration_time, ttl_seconds } = req.body;
+    // --- FIX 1: Destructure the correct name (encrypted_data) ---
+    const { encrypted_data, expiration_time, ttl_seconds } = req.body; 
 
     // Frontend dropdown values (seconds) we expect from the UI (recommended)
     const ALLOWED_TTLS = [3600, 86400, 604800, 2592000, 31536000];
@@ -38,21 +39,19 @@ router.post('/save', auth, async (req, res) => {
         }
     }
     
-    if (!encrypted_content || !userId) {
-        console.error(`Save attempt failed: Missing encrypted_content or user ID (ID: ${userId})`);
+    // --- FIX 2: Check for the correct name (encrypted_data) ---
+    if (!encrypted_data || !userId) { 
+        console.error(`Save attempt failed: Missing encrypted_data or user ID (ID: ${userId})`);
         return res.status(400).json({ error: 'Encrypted content or user authentication failed.' });
     }
 
     try {
-        // COALESCE ensures expiration_time is NULL if not sent, preventing a NOT NULL violation
-        // If the DB enforces NOT NULL on expiration_time, provide a sensible default far in the future
-        // when the client omits expiration_time. Prefer explicit timestamp insertion to avoid casting issues.
-        // Compute expiration in the DB using NOW() + ttl * interval '1 second' to ensure canonical timing
+        // --- FIX 3: Insert into the correct column name (encrypted_data) ---
         const result = await pool.query(
-            `INSERT INTO clipboard_data (user_id, encrypted_content, expiration_time)
+            `INSERT INTO clipboard_data (user_id, encrypted_data, expiration_time)
              VALUES ($1, $2, NOW() + ($3 * INTERVAL '1 second'))
              RETURNING id, created_at, expiration_time`,
-            [userId, encrypted_content, ttl]
+            [userId, encrypted_data, ttl]
         );
 
         const row = result.rows[0];
@@ -77,8 +76,9 @@ router.post('/save', auth, async (req, res) => {
 router.get('/latest', auth, async (req, res) => {
     const userId = req.user.id;
     try {
+        // --- FIX 4: Select the correct column name (encrypted_data) ---
         const result = await pool.query(
-            'SELECT encrypted_content, created_at, expiration_time FROM clipboard_data WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
+            'SELECT encrypted_data, created_at, expiration_time FROM clipboard_data WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
             [userId]
         );
 
@@ -90,7 +90,8 @@ router.get('/latest', auth, async (req, res) => {
     const row = result.rows[0];
     row.expires_at = row.expiration_time ? new Date(row.expiration_time).toISOString() : null;
     delete row.expiration_time;
-    res.status(200).json(row);
+    // NOTE: The JSON response will now contain encrypted_data, which the frontend must update to read.
+    res.status(200).json(row); 
     } catch (error) {
         console.error('Error fetching latest clip:', error);
         res.status(500).json({ error: 'Internal server error while fetching clip' });
@@ -107,16 +108,17 @@ router.get('/history', auth, async (req, res) => {
     }
     
     try {
-        // Fetch ALL clips for the user, ordered by creation time
+        // --- FIX 5: Select the correct column name (encrypted_data) ---
         const result = await pool.query(
-            'SELECT id, encrypted_content, created_at, expiration_time FROM clipboard_data WHERE user_id = $1 ORDER BY created_at DESC',
+            'SELECT id, encrypted_data, created_at, expiration_time FROM clipboard_data WHERE user_id = $1 ORDER BY created_at DESC',
             [userId]
         );
 
         // Map rows to include expires_at ISO string
         const mapped = result.rows.map(r => ({
             id: r.id,
-            encrypted_content: r.encrypted_content,
+            // --- FIX 6: Use the correct column name (encrypted_data) ---
+            encrypted_data: r.encrypted_data, 
             created_at: r.created_at,
             expires_at: r.expiration_time ? new Date(r.expiration_time).toISOString() : null
         }));

@@ -8,7 +8,10 @@ import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 // --- Configuration ---
-const API_BASE_URL = 'http://localhost:5000/api/clipboard';
+// Use hosted backend when available. Vite exposes env vars via import.meta.env.VITE_... in the browser.
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL)
+  ? import.meta.env.VITE_API_BASE_URL
+  : 'https://universal-clipboard-q6po.onrender.com/api/clipboard';
 
 // --- Encryption and Decryption Functions ---
 const encryptContent = (content, secretKey) => {
@@ -74,7 +77,8 @@ const Dashboard = () => {
 
             return {
                 ...item,
-                decrypted_content: decryptContent(item.encrypted_content, encryptionKey),
+                // --- FIX: Change item.encrypted_content to item.encrypted_data ---
+                decrypted_content: decryptContent(item.encrypted_data, encryptionKey), 
                 display_date: new Date(item.created_at).toLocaleTimeString(),
                 expires_at_ts: expiresAt,
             };
@@ -106,8 +110,21 @@ const Dashboard = () => {
       
       const ttlSeconds = TTL_OPTIONS[ttlOption] || null;
 
+      // NOTE: The request payload uses 'encrypted_content', which the backend now reads as 'encrypted_data' from req.body.
+      // The backend code was fixed to destructure { encrypted_data, ... } from req.body, so this is fine.
+      // If the backend had been fixed to expect 'encrypted_data' in the payload, this would need a change:
+      // await axios.post(`${API_BASE_URL}/save`, { encrypted_data: encryptedContent, ... 
+      // Since the backend fix was to read `encrypted_data` from the request body (which contained `encrypted_content`), 
+      // we must ensure the backend is expecting the name in the payload that the frontend sends.
+      // The backend was fixed to read { encrypted_data, ... } from req.body, but the frontend sends { encrypted_content: ... }.
+      // Let's assume the frontend must be consistent with the database and use encrypted_data in the payload:
+      //
+      // If your original backend used req.body.encrypted_content, we must change this.
+      // Since the database column is encrypted_data, it's safer to send it as such:
+      
       await axios.post(`${API_BASE_URL}/save`, {
-        encrypted_content: encryptedContent,
+        // --- FIX: Change payload key to encrypted_data for consistency (Backend should be updated too if it reads encrypted_data from req.body) ---
+        encrypted_data: encryptedContent, 
         ttl_seconds: ttlSeconds,
       }, {
         headers: { Authorization: `Bearer ${token}` },
