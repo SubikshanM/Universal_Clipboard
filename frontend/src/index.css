@@ -1,0 +1,348 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  /* Default to light colors; dark mode handled by .dark-mode on body */
+  color: #213547; /* main text color for light mode */
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark mode overrides when ThemeContext adds .dark-mode to body */
+body.dark-mode {
+  background-color: #071224 !important;
+  color: #e6eef8 !important;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode strong {
+  color: #e6eef8 !important;
+}
+
+/* Make common text and muted text readable in dark mode */
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode label,
+body.dark-mode td,
+body.dark-mode th,
+body.dark-mode a {
+  color: #cfe8ff !important;
+}
+
+/* Inputs, textarea, selects */
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background: #071224 !important;
+  color: #e6eef8 !important;
+  border-color: #18303f !important;
+}
+
+/* Buttons contrast in dark mode */
+/* Don't force all buttons to dark background; only style native/buttons that are NOT using our .btn classes.
+   This prevents a blanket !important from overriding .btn themed styles. */
+body.dark-mode button:not(.btn) {
+  background-color: #0b2330 !important;
+  color: #e6eef8 !important;
+  border-color: #15313f !important;
+}
+
+/* Reusable button classes with theme-aware overrides */
+.btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  font-weight: 600;
+}
+.btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(100,120,255,0.12); }
+.btn:hover { transform: translateY(-2px); }
+
+/* Primary (send) */
+.btn-primary { background: #007bff; color: #fff; box-shadow: 0 4px 12px rgba(0,123,255,0.08); }
+body.dark-mode .btn-primary { background: #06b6d4; color: #04202a; box-shadow: 0 10px 30px rgba(6,182,212,0.14); }
+
+/* Amber (copy) */
+.btn-amber { background: #f59e0b; color: #fff; box-shadow: 0 4px 12px rgba(245,158,11,0.08); }
+body.dark-mode .btn-amber { background: #f59e0b; color: #fff; box-shadow: 0 8px 22px rgba(245,158,11,0.12); }
+
+/* Danger (delete) */
+.btn-danger { background: #dc3545; color: #fff; box-shadow: 0 4px 12px rgba(220,53,69,0.08); }
+body.dark-mode .btn-danger { background: #dc3545; color: #fff; box-shadow: 0 8px 22px rgba(220,53,69,0.18); }
+
+/* Logout / accent */
+.btn-accent { background: #dc3545; color: #fff; box-shadow: 0 4px 12px rgba(220,53,69,0.08); }
+body.dark-mode .btn-accent { background: #dc3545; box-shadow: 0 10px 30px rgba(220,53,69,0.18); }
+
+/* Small variant for table actions */
+.btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 6px; }
+
+/* Avatar and toggle visibility helpers */
+.avatar-btn {
+  padding: 0; /* avatar uses fixed size */
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: box-shadow 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+}
+.btn-toggle { transition: box-shadow 0.12s ease, border-color 0.12s ease, transform 0.12s ease; }
+
+/* Make the outline much more visible in dark mode: stronger white border and outer glow. Use !important to ensure it shows above inline styles. */
+body.dark-mode .avatar-btn,
+body.dark-mode .btn-toggle {
+  border: 2px solid rgba(255,255,255,0.95) !important;
+  box-shadow: 0 8px 28px rgba(255,255,255,0.12), 0 0 0 8px rgba(255,255,255,0.06) !important;
+}
+body.dark-mode .avatar-btn:hover,
+body.dark-mode .btn-toggle:hover {
+  border-color: rgba(255,255,255,1) !important;
+  box-shadow: 0 18px 48px rgba(255,255,255,0.18), 0 0 0 10px rgba(255,255,255,0.08) !important;
+  transform: translateY(-2px);
+}
+
+
+
+/* Make box-sizing consistent so padding doesn't increase element width and cause overflow */
+*, *::before, *::after { box-sizing: border-box; }
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  /* Use block layout so the app root can expand to full viewport width */
+  display: block;
+  min-width: 320px;
+  min-height: 100vh;
+  /* Prevent any accidental horizontal overflow from producing a scrollbar */
+  overflow-x: hidden;
+}
+
+/* Custom cursor removed — revert to system default cursors to avoid unexpected UI changes. */
+
+
+/* Restore default/text cursor for form fields and contenteditable regions */
+input, textarea, select, [contenteditable] {
+  cursor: text !important;
+}
+
+/* Disable custom cursor on touch devices (coarse pointers) to avoid surprises */
+@media (pointer: coarse) {
+  body, body * { cursor: auto !important; }
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+/* Title pop-in animation: starts very small then grows to steady size */
+.app-title { display: block; width: 100%; text-align: center; }
+.pop-in { transform: scale(0.72); opacity: 0; animation: popIn 5000ms cubic-bezier(.2,.9,.3,1) both; }
+
+@keyframes popIn {
+  0% { transform: scale(0.48); opacity: 0; }
+  60% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop-in { animation: none !important; transform: none !important; opacity: 1 !important; }
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Ensure avatar/toggle have a persistent visible outline in dark mode.
+   This rule is intentionally placed after generic button rules and is
+   highly specific so it isn't accidentally overridden. Also provide a
+   `.force-visible` helper class that can be applied to make the border
+   visible regardless of theme (useful for testing). */
+body.dark-mode button.avatar-btn,
+body.dark-mode .avatar-btn,
+body.dark-mode .btn-toggle,
+.avatar-btn.force-visible,
+.btn-toggle.force-visible {
+  border: 2px solid rgba(255,255,255,0.95) !important;
+  box-shadow: 0 10px 34px rgba(255,255,255,0.12), 0 0 0 8px rgba(255,255,255,0.06) !important;
+}
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* Header controls spacing (desktop/default). Increase gap for clearer separation between circular controls */
+.header-controls { display: flex; gap: 28px !important; align-items: center; }
+.auth-top-right { display: flex; gap: 20px !important; align-items: center; }
+
+/* Extra safety spacing for the specific toggle->avatar pair (in case other small controls exist) */
+.header-controls > .btn-toggle + .avatar-btn { margin-left: 12px !important; }
+
+/* Responsive rules - mobile-first adjustments */
+@media (max-width: 900px) {
+  h1 { font-size: 2.2em; }
+  .header-row { flex-direction: column; align-items: center; gap: 10px; }
+  .header-row .header-controls { margin-left: 0 !important; }
+  .app-card { padding: 16px; }
+}
+
+@media (max-width: 600px) {
+  /* Make layout stack nicely on phones */
+  .header-row { flex-direction: column; align-items: center; text-align: center; }
+  .header-row h1 { font-size: 1.6rem; margin: 0; }
+  .header-controls { display: flex; gap: 8px; }
+
+  .app-container { padding-left: 12px; padding-right: 12px; }
+  .app-card { width: 100%; padding: 14px; }
+
+  .section-box { padding: 14px; }
+  .status-box { margin: 12px 0; }
+
+  /* Make primary actions full-width in each section on mobile */
+  .section-box .btn.btn-primary { width: 100%; display: block; }
+
+  /* History table -> stacked cards on small screens */
+  .history-table { width: 100%; }
+  .history-table thead { display: none; }
+  .history-table tbody tr { display: block; margin-bottom: 12px; background: transparent; border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.03); }
+  .history-table tbody td { display: block; width: 100%; padding: 6px 0; text-align: left; border-bottom: none; }
+  .history-table tbody td:before { content: attr(data-label) ": "; font-weight: 700; display: inline-block; width: 110px; color: rgba(0,0,0,0.45); }
+  /* Adjust colors when in dark mode */
+  body.dark-mode .history-table tbody tr { border-color: rgba(255,255,255,0.04); }
+  body.dark-mode .history-table tbody td:before { color: rgba(255,255,255,0.55) !important; }
+  .history-table tbody .actions { display: flex; gap: 8px; }
+  .history-table tbody .actions .btn { flex: 1; }
+
+  /* Auth screen adjustments */
+  .auth-wrapper { padding-left: 12px; padding-right: 12px; }
+  .auth-card { width: 100%; padding: 14px; }
+  .auth-card input { width: 100%; box-sizing: border-box; }
+
+  /* Slightly larger touch targets for avatar/toggle on mobile */
+  .avatar-btn, .btn-toggle { width: 44px !important; height: 44px !important; }
+}
+
+/* Entrance animation for login card: spins while dropping into place */
+@keyframes dropSpin {
+  0% { transform: translateY(-220px) rotate(-720deg) scale(0.9); opacity: 0; }
+  60% { transform: translateY(24px) rotate(20deg) scale(1.02); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+}
+
+.drop-spin {
+  transform-origin: center center;
+  animation: dropSpin 900ms cubic-bezier(.2,.9,.3,1) both;
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .drop-spin { animation: none !important; }
+}
+
+/* Glassy auth card styles */
+.auth-card.glass {
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 12px 40px rgba(2,6,23,0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #000;
+}
+
+body.dark-mode .auth-card.glass {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  color: #e6eef8;
+}
+
+.auth-top-right { position: absolute; top: 10px; right: 10px; z-index: 1100; }
+.auth-top-right .btn, .auth-top-right .btn-toggle { width: 40px; height: 40px; padding: 6px; }
+
+/* --- Auth background: low-contrast animated gradient blobs --- */
+.auth-wrapper { position: relative; overflow: hidden; }
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(1200px 600px at 10% 20%, rgba(100,140,255,0.06), transparent 20%),
+              radial-gradient(800px 400px at 90% 80%, rgba(6,182,212,0.05), transparent 25%),
+              linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  mix-blend-mode: normal;
+  transform: translateZ(0);
+  animation: auth-bg-move 18s linear infinite;
+}
+
+@keyframes auth-bg-move {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  50% { transform: translate3d(-6%, 2%, 0) scale(1.02); }
+  100% { transform: translate3d(0,0,0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-bg { animation: none !important; }
+}
+
+/* --- Animated submit button styles --- */
+.submit-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; min-width: 120px; }
+.submit-btn .btn-inner { display: inline-flex; align-items: center; gap: 8px; position: relative; }
+.submit-btn .btn-label { display: inline-block; transition: opacity .18s ease, transform .18s ease; }
+
+.submit-btn.loading { pointer-events: none; }
+.submit-btn.success { background-color: #12b886 !important; color: #052018 !important; }
+.submit-btn.success .btn-label { opacity: 0; transform: translateY(-6px); }
+.submit-btn .btn-check { width: 18px; height: 18px; position: absolute; opacity: 0; transform: scale(0.6) translateY(2px); transition: opacity .22s ease, transform .22s ease; }
+.submit-btn.success .btn-check { opacity: 1; transform: scale(1) translateY(0); }
+
+/* Respect reduced motion for button animations */
+@media (prefers-reduced-motion: reduce) {
+  .submit-btn .btn-check { transition: none !important; animation: none !important; }
+}
+
+
+
