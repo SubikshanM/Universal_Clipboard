@@ -4,10 +4,15 @@ const router = express.Router();
 const db = require('../db'); // Database connection module
 const bcrypt = require('bcryptjs'); // Secure hashing library (use bcryptjs for easier installs)
 const jwt = require('jsonwebtoken'); // JWT library for token generation
+const { sendOtpEmail } = require('../email');
 
 // Configuration
 const saltRounds = 10; // Standard for bcrypt hashing
 const tokenExpiration = '2h'; // JWT expires in 2 hours
+
+// OTP defaults
+const OTP_EXPIRATION_MINUTES = parseInt(process.env.OTP_EXPIRATION_MINUTES || '10', 10);
+const OTP_RATE_LIMIT_PER_HOUR = parseInt(process.env.OTP_RATE_LIMIT_PER_HOUR || '5', 10);
 
 // --- POST /api/auth/signup ---
 // Handles new user registration, securely hashing the password.
@@ -42,6 +47,105 @@ router.post('/signup', async (req, res) => {
     } catch (err) {
         console.error('Error during signup:', err.stack);
         res.status(500).json({ error: 'Internal server error during registration.' });
+    }
+});
+
+// POST /api/auth/request-signup-otp
+// Request an OTP to be sent to the provided email for signup verification.
+router.post('/request-signup-otp', async (req, res) => {
+    const { email, password, username } = req.body || {};
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    try {
+        // Rate-limit: count recent OTPs for this email in the last hour
+        const rateRes = await db.query(
+            `SELECT COUNT(*)::int AS cnt FROM signup_otps WHERE email = $1 AND created_at > NOW() - INTERVAL '1 hour'`,
+            [email]
+        );
+        const recentCount = parseInt(rateRes.rows[0].cnt, 10) || 0;
+        if (recentCount >= OTP_RATE_LIMIT_PER_HOUR) {
+            return res.status(429).json({ error: 'Too many OTP requests for this email. Please try again later.' });
+        }
+
+        // Generate a 6-digit numeric OTP
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+        // Hash OTP and password
+        const otpHash = await bcrypt.hash(otp, saltRounds);
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        const expiresAt = new Date(Date.now() + OTP_EXPIRATION_MINUTES * 60 * 1000);
+
+        // Persist the OTP entry
+        await db.query(
+            `INSERT INTO signup_otps (email, otp_hash, password_hash, username, expires_at) VALUES ($1,$2,$3,$4,$5)`,
+            [email, otpHash, passwordHash, username || null, expiresAt]
+        );
+
+        // Send OTP via email (or log in dev mode)
+        try {
+            await sendOtpEmail(email, otp);
+        } catch (err) {
+            console.error('Failed to send OTP email:', err);
+            // continue — we still respond 200 to avoid leaking information
+        }
+
+        // Generic response to avoid user enumeration
+        return res.status(200).json({ message: 'If the email is valid an OTP has been sent.' });
+    } catch (err) {
+        console.error('Error in request-signup-otp:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/verify-signup-otp
+// Verify the OTP for an email and complete signup (create user). Does NOT auto-login.
+router.post('/verify-signup-otp', async (req, res) => {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required.' });
+
+    try {
+        // Find the most recent, unused, unexpired OTP record for this email
+        const otpRes = await db.query(
+            `SELECT * FROM signup_otps WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1`,
+            [email]
+        );
+
+        if (otpRes.rows.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired OTP.' });
+        }
+
+        const otpRow = otpRes.rows[0];
+
+        const match = await bcrypt.compare(otp, otpRow.otp_hash);
+        if (!match) {
+            return res.status(400).json({ error: 'Invalid OTP.' });
+        }
+
+        // Ensure user does not already exist
+        const existRes = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (existRes.rows.length > 0) {
+            // Mark OTP used to prevent replays and return generic message
+            await db.query('UPDATE signup_otps SET used = true WHERE id = $1', [otpRow.id]);
+            return res.status(409).json({ error: 'An account with this email already exists.' });
+        }
+
+        // Create the user with the previously-stored password_hash and optional username
+        const insertRes = await db.query(
+            'INSERT INTO users (email, password_hash, username) VALUES ($1, $2, $3) RETURNING id',
+            [email, otpRow.password_hash, otpRow.username || null]
+        );
+
+        // Mark the OTP record used
+        await db.query('UPDATE signup_otps SET used = true WHERE id = $1', [otpRow.id]);
+
+        return res.status(201).json({ message: 'Signup verified. Please login using your credentials.' });
+
+    } catch (err) {
+        console.error('Error in verify-signup-otp:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
     }
 });
 

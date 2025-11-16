@@ -92,10 +92,31 @@ async function createTables() {
     );
   `;
 
+  // SQL to create signup_otps table for OTP-based signup flow
+  const createSignupOtps = `
+    CREATE TABLE IF NOT EXISTS signup_otps (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      otp_hash VARCHAR(255) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      username VARCHAR(50),
+      expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+      used BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createSignupOtpsIndex = `
+    CREATE INDEX IF NOT EXISTS idx_signup_otps_email_created_at
+      ON signup_otps (email, created_at DESC);
+  `;
+
   try {
     // Use the pool to run the queries sequentially
-    await pool.query(createUsers);
-    await pool.query(createClipboard);
+  await pool.query(createUsers);
+  await pool.query(createClipboard);
+  await pool.query(createSignupOtps);
+  await pool.query(createSignupOtpsIndex);
     console.log('Database tables are ready.');
   } catch (err) {
     console.error('Error creating tables:', err);
