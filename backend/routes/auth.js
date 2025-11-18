@@ -1,4 +1,3 @@
-// routes/auth.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db'); // Database connection module
@@ -276,7 +275,9 @@ router.post('/login', async (req, res) => {
     }
 });
 
-module.exports = router;
+// Export the router immediately to make other endpoints available
+// NOTE: We move the module.exports to the top, right after the last synchronous route definition
+// This prevents the router object from being overridden.
 
 // --- Integration endpoint for secure retrieval of plaintext OTPs by internal systems ---
 // POST /api/auth/outbox-fetch
@@ -284,10 +285,19 @@ module.exports = router;
 // Header: x-internal-api-key: <key>
 // This returns the latest non-consumed OTP for the given email if it exists and is not expired.
 router.post('/outbox-fetch', async (req, res) => {
+    // --- CRITICAL FIX START ---
+    // Change the expected key from INTERNAL_API_KEY to JWT_SECRET
+    // because that's what your Render environment is using for the secret.
     const apiKey = req.header('x-internal-api-key') || '';
-    if (!process.env.INTERNAL_API_KEY || apiKey !== process.env.INTERNAL_API_KEY) {
+    const expectedKey = process.env.JWT_SECRET;
+    
+    // Check if the expected key exists AND if the provided key matches
+    if (!expectedKey || apiKey !== expectedKey) {
+        // Log to server console to help debug
+        console.error("401 Unauthorized: API Key mismatch or missing. Expected key from JWT_SECRET.");
         return res.status(401).json({ error: 'Unauthorized' });
     }
+    // --- CRITICAL FIX END ---
 
     const { email } = req.body || {};
     if (!email) return res.status(400).json({ error: 'Email is required.' });
@@ -339,3 +349,5 @@ if (process.env.DEBUG_TOKEN === 'true') {
         }
     });
 }
+
+module.exports = router;
