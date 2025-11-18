@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 // ThemeToggle moved to fixed global position in App.jsx
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -12,6 +13,10 @@ const AuthScreen = () => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Signup
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [signupStep, setSignupStep] = useState('enterDetails'); // 'enterDetails' | 'enterOtp'
+  const [otp, setOtp] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendTimerRef = useRef(null);
   
   const switchMode = () => {
     setIsLogin(prev => !prev);
@@ -22,22 +27,110 @@ const AuthScreen = () => {
   };
 
   const [submitState, setSubmitState] = useState('idle'); // 'idle' | 'loading' | 'success'
+  const [notice, setNotice] = useState(null); // { type: 'success'|'info'|'error', text }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setSubmitState('loading');
       if (isLogin) {
-        await login({ email, password });
+        const ok = await login({ email, password });
+        if (ok) {
+          // mark that login succeeded so the Dashboard can show a welcome/status
+          try { localStorage.setItem('justLoggedIn', '1'); } catch (e) {}
+          setSubmitState('success');
+          // let the app transition; keep a tiny delay so user sees button success state
+          setTimeout(() => setSubmitState('idle'), 600);
+        } else {
+          setSubmitState('idle');
+        }
       } else {
-        await signup({ email, password });
+        // Signup flow: two-step with OTP
+        if (signupStep === 'enterDetails') {
+          // Request OTP from the server
+          try {
+            const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+              ? import.meta.env.VITE_API_URL
+              : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+
+            await axios.post(`${API_URL}/request-signup-otp`, { email, password });
+            setSignupStep('enterOtp');
+            setNotice({ type: 'info', text: 'OTP sent to your email. Enter it below to verify.' });
+            // start 60s cooldown for resend
+            setResendCooldown(60);
+            resendTimerRef.current = setInterval(() => {
+              setResendCooldown((c) => {
+                if (c <= 1) {
+                  clearInterval(resendTimerRef.current);
+                  return 0;
+                }
+                return c - 1;
+              });
+            }, 1000);
+            setSubmitState('idle');
+          } catch (err) {
+            const msg = err.response?.data?.error || 'Failed to request OTP.';
+            setNotice({ type: 'error', text: msg });
+            setSubmitState('idle');
+          }
+        } else if (signupStep === 'enterOtp') {
+          // Verify OTP
+          try {
+            const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+              ? import.meta.env.VITE_API_URL
+              : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+
+            await axios.post(`${API_URL}/verify-signup-otp`, { email, otp });
+            setNotice({ type: 'success', text: 'Signup verified. Please login with your credentials.' });
+            setSubmitState('success');
+            // Reset to login mode after short delay
+            setTimeout(() => {
+              setIsLogin(true);
+              setSignupStep('enterDetails');
+              setOtp('');
+              setPassword('');
+              setSubmitState('idle');
+            }, 1200);
+          } catch (err) {
+            const msg = err.response?.data?.error || 'OTP verification failed.';
+            setNotice({ type: 'error', text: msg });
+            setSubmitState('idle');
+          }
+        }
       }
-      // if no error thrown, show success briefly
-      setSubmitState('success');
-      setTimeout(() => setSubmitState('idle'), 1000);
     } catch (err) {
       // login/signup should set error in AuthContext; revert to idle so user can retry
       setSubmitState('idle');
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (resendTimerRef.current) clearInterval(resendTimerRef.current);
+    };
+  }, []);
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+        ? import.meta.env.VITE_API_URL
+        : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+      await axios.post(`${API_URL}/request-signup-otp`, { email, password });
+      setNotice({ type: 'info', text: 'OTP resent. Check your email.' });
+      setResendCooldown(60);
+      resendTimerRef.current = setInterval(() => {
+        setResendCooldown((c) => {
+          if (c <= 1) {
+            clearInterval(resendTimerRef.current);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Failed to resend OTP.';
+      setNotice({ type: 'error', text: msg });
     }
   };
 
@@ -64,7 +157,12 @@ const AuthScreen = () => {
         {/* Theme toggle moved to fixed top-right control for the whole page */}
         <h2 style={{ ...styles.header, color: isDark ? '#e6eef8' : styles.header.color }}>{isLogin ? 'Login to Universal Clipboard' : 'Create an Account'}</h2>
 
-        {/* Display Error Message from Context */}
+        {/* Display Notice or Error Message */}
+        {notice && (
+          <div role="status" aria-live="polite" style={{ ...styles.notice, ...(notice.type === 'success' ? styles.noticeSuccess : {}) }}>
+            {notice.text}
+          </div>
+        )}
         {error && <p style={styles.error}>{error}</p>}
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -84,6 +182,28 @@ const AuthScreen = () => {
             required
             style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
           />
+
+          {/* OTP input shown during signup second step */}
+          {!isLogin && signupStep === 'enterOtp' && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                required
+                style={{ ...styles.input, flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendCooldown > 0}
+                style={{ padding: '8px 10px', borderRadius: '4px', cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer' }}
+              >
+                {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend'}
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -140,6 +260,18 @@ const styles = {
     color: 'red',
     marginBottom: '10px',
     fontWeight: 'bold'
+  },
+  notice: {
+    padding: '10px',
+    borderRadius: '6px',
+    marginBottom: '10px',
+    backgroundColor: '#eef6ff',
+    color: '#043a6b',
+    fontWeight: 600,
+  },
+  noticeSuccess: {
+    backgroundColor: '#e6ffef',
+    color: '#0b6b3a'
   },
   form: {
     display: 'flex',

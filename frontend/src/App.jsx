@@ -6,6 +6,7 @@ import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import Toast from './components/Toast';
 
 // --- Configuration ---
 // Use hosted backend when available. Vite exposes env vars via import.meta.env.VITE_... in the browser.
@@ -29,11 +30,12 @@ const decryptContent = (encryptedContent, secretKey) => {
 
 // --- Clipboard Dashboard Component (Manual Mode with History) ---
 
-const Dashboard = () => {
+const Dashboard = ({ showToast }) => {
   const { user, token, logout } = useAuth();
   const { isDark } = useTheme();
   
   const [status, setStatus] = useState('Ready to send data.');
+  const [statusLockUntil, setStatusLockUntil] = useState(0); // ms timestamp to avoid status overrides (used after login)
   const [inputText, setInputText] = useState(''); 
   const [history, setHistory] = useState([]); // State for the history list
   const [ttlOption, setTtlOption] = useState(''); // user-selected TTL option (mandatory)
@@ -52,8 +54,8 @@ const Dashboard = () => {
 
   // --- API Handler: Fetch and Decrypt History ---
   const fetchHistory = useCallback(async () => {
-    try {
-        setStatus('Fetching secure clip history...');
+  try {
+    if (Date.now() >= statusLockUntil) setStatus('Fetching secure clip history...');
         const response = await axios.get(`${API_BASE_URL}/history`, {
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -84,14 +86,40 @@ const Dashboard = () => {
             };
         });
 
-        setHistory(decryptedHistory.filter(item => item.decrypted_content !== null)); // Filter out failed decryptions
-        setStatus('History loaded successfully.');
+  setHistory(decryptedHistory.filter(item => item.decrypted_content !== null)); // Filter out failed decryptions
+  if (Date.now() >= statusLockUntil) setStatus('History loaded successfully.');
 
     } catch (error) {
       console.error('Error fetching clip history:', error);
       setStatus(`Error loading history. (${error.response?.data?.message || error.message})`);
     }
   }, [token, encryptionKey]);
+
+  // If the user just logged in, show a brief success status once
+  useEffect(() => {
+    try {
+      const flag = localStorage.getItem('justLoggedIn');
+      if (flag && token) {
+        setStatus('Login successful. Welcome!');
+        // prevent other code from overwriting the status for a short period
+        setStatusLockUntil(Date.now() + 3000);
+        localStorage.removeItem('justLoggedIn');
+        // Clear the status message after a short delay so it doesn't persist
+        const t = setTimeout(() => setStatus('Ready to send data.'), 3000);
+        // Also show a floating toast if parent provided one (preferred) or via window helper
+        try {
+          if (typeof showToast === 'function') {
+            showToast('Login successful', 'success');
+          } else if (window.__showToast) {
+            window.__showToast('Login successful', 'success');
+          }
+        } catch (e) {}
+        return () => clearTimeout(t);
+      }
+    } catch (e) {
+      // ignore localStorage errors
+    }
+  }, [token]);
 
   // --- API Handler: Encrypt and Send to Server (PUSH) ---
   const syncToServer = async (content) => {
@@ -345,6 +373,12 @@ const styles = {
 
 function App() {
   const { token } = useAuth();
+  const [toast, setToast] = React.useState(null); // { message, type }
+  // Expose helper for child components (Dashboard) to trigger the toast via window
+  React.useEffect(() => {
+    window.__showToast = (message, type = 'info') => setToast({ message, type });
+    return () => { try { delete window.__showToast; } catch (e) {} };
+  }, []);
 
   return (
     <div className="App">
@@ -356,7 +390,8 @@ function App() {
         </div>
       )}
   {/* ClickDesign removed (disabled) per user request */}
-      {token ? <Dashboard /> : <AuthScreen />}
+      {token ? <Dashboard showToast={(m,t)=>setToast({message:m,type:t})} /> : <AuthScreen />}
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
     </div>
   );
 }

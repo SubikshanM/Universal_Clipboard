@@ -1,0 +1,92 @@
+{
+  "name": "Send signup OTP via n8n (Corrected)",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://universal-clipboard-q6po.onrender.com/api/auth/outbox-fetch",
+        "options": {
+          "headers": {
+            "headerParameters": [
+              {
+                "name": "x-internal-api-key",
+                "value": "={{$credentials.internalApi.apiKey}}"
+              }
+            ]
+          },
+          "bodyParameters": {
+            "parameter": [
+              {
+                "name": "email",
+                "value": "={{$json.body.email}}"
+              }
+            ]
+          }
+        },
+        "method": "POST",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "optionsVisible": true
+      },
+      "name": "Fetch OTP from backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "={{$node[\"Fetch OTP from backend\"].json[\"email\"]}}",
+        "subject": "Your Universal Clipboard verification code",
+        "text": "Your one-time verification code is {{$node[\"Fetch OTP from backend\"].json[\"otp\"]}}. It expires at {{$node[\"Fetch OTP from backend\"].json[\"expires_at\"]}}.",
+        "html": "<p>Your one-time verification code is <strong>{{$node[\"Fetch OTP from backend\"].json[\"otp\"]}}</strong></p><p>This code expires at {{$node[\"Fetch OTP from backend\"].json[\"expires_at\"]}}</p>"
+      },
+      "name": "Send Email (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "path": "webhook/signup-otp",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        50,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": [
+      [
+        "Fetch OTP from backend"
+      ]
+    ],
+    "Fetch OTP from backend": [
+      [
+        "Send Email (Gmail)"
+      ]
+    ]
+  },
+  "active": false,
+  "settings": {},
+  "credentials": {
+    "gmail": {
+      "name": "Gmail Account"
+    },
+    "internalApi": {
+      "name": "Backend Internal API Key"
+    }
+  }
+}

@@ -27,9 +27,16 @@ if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
 }
 
 async function sendOtpEmail(toEmail, otpCode) {
-  // In debug mode, just log the OTP and return
-  if (DEBUG_EMAIL_MODE || !transporter) {
+  // Always log the OTP when DEBUG_EMAIL_MODE is enabled (useful for testing)
+  if (DEBUG_EMAIL_MODE) {
     console.log(`[DEBUG EMAIL] OTP for ${toEmail}: ${otpCode}`);
+  }
+
+  // If transporter is not configured, fall back to logging-only behavior
+  if (!transporter) {
+    if (!DEBUG_EMAIL_MODE) {
+      console.warn('No SMTP transporter configured; OTP was logged instead of sent.');
+    }
     return Promise.resolve({ logged: true });
   }
 
