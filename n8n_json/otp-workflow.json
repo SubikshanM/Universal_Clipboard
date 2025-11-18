@@ -3,43 +3,101 @@
   "nodes": [
     {
       "parameters": {
-        "path": "signup-otp",
-        "options": {
-          "responseMode": "json",
-          "responseCode": "200",
-          "responseData": "{\"status\":\"success\",\"message\":\"OTP request received. Email sent.\"}"
-        }
+        "resource": "message",
+        "subject": "Your Universal Clipboard verification code",
+        "includeHtml": true,
+        "htmlMessage": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;\">\n    <h2 style=\"color: #333; text-align: center;\">Your Universal Clipboard Verification Code</h2>\n    <p style=\"font-size: 16px; color: #555;\">\n        Thank you for starting your registration process. To proceed, please use the 6-digit verification code below:\n    </p>\n\n    <!-- FIXED OTP DISPLAY: Using the exact node name and simple .json.otp path -->\n    <div style=\"text-align: center; margin: 30px 0;\">\n        <span style=\"font-size: 32px; font-weight: bold; color: #007bff; background-color: #e9ecef; padding: 15px 30px; border-radius: 6px; letter-spacing: 5px; display: inline-block;\">\n            {{ $node[\"Fetch OTP (POST /outbox-fetch)\"].json.otp }}\n        </span>\n    </div>\n    \n    <p style=\"font-size: 14px; color: #888;\">\n        This code is valid for a short period. If you did not request this code, please ignore this email.\n    </p>\n</div>",
+        "message": "=Your Universal Clipboard Verification Code:\n{{ \"Code: \" + $node[\"Fetch OTP (POST /outbox-fetch)\"].json.otp }}\n\nThis code is valid for a short period. If you did not request this code, please ignore this email.\n\nThank you for starting your registration process.\nUniversal Clipboard Team",
+        "toList": [
+          "={{ $node[\"Webhook Trigger\"].json.body.email }}"
+        ],
+        "additionalFields": {}
       },
+      "name": "Send Email (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "85190995-a10e-43bf-92f1-2b5a223bc286",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "oBbHfSfY0IGBeVJ1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook/signup-otp",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
         0,
         0
       ],
-      "id": "7649d21c-a110-469b-8919-86646549a1d4",
-      "name": "Webhook Trigger"
+      "id": "870e9bdb-bb7f-40a2-8eba-414a9118af3b",
+      "webhookId": "650e7a97-7887-45f1-8f8f-471018fee20d"
     },
     {
       "parameters": {
-        "authentication": "predefined",
-        "predefinedCredentialType": "apiKey",
-        "url": "[https://your-backend-api.com/outbox/fetch](https://your-backend-api.com/outbox/fetch)",
-        "method": "POST",
-        "headerParameters": [
-          {
-            "name": "Authorization",
-            "value": "Bearer YOUR_SECRET_API_KEY"
-          }
-        ],
-        "bodyParameters": [
-          {
-            "name": "email",
-            "value": "={{ $('Webhook Trigger').first(0).json.body.email }}"
-          }
-        ],
-        "options": {
-          "responseFormat": "json"
+        "requestMethod": "POST",
+        "url": "=https://universal-clipboard-q6po.onrender.com/api/auth/send-otp",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "email",
+              "value": "=={{$json[\"body\"][\"email\"]}}"
+            }
+          ]
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
         }
+      },
+      "name": "Fetch OTP from backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f7ec15e3-b829-4535-a6e1-555661def627"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://universal-clipboard-q6po.onrender.com/api/auth/outbox-fetch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-internal-api-key",
+              "value": "48e8d8e44ea85968c550c07cd7aa5fa0bf86c5ed5cd367619dbcabdb5ebb7c1a251f39108bf6954f718099234defacce562d63a1d1d58bf5d4851ce6dc752bb7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "=={{$('Webhook Trigger').first(0).json.body.email}}"
+            }
+          ]
+        },
+        "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
@@ -49,25 +107,6 @@
       ],
       "id": "e4b542fc-2156-4ab0-8edb-4627d23c502b",
       "name": "Fetch OTP (POST /outbox-fetch)"
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "subject": "Your Universal Clipboard verification code",
-        "includeHtml": true,
-        "htmlMessage": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;\">\n\u00A0\u00A0  <h2 style=\"color: #333; text-align: center;\">Your Universal Clipboard Verification Code</h2>\n\u00A0\u00A0  <p style=\"font-size: 16px; color: #555;\">\n\u00A0\u00A0\u00A0\u00A0  Thank you for starting your registration process. To proceed, please use the 6-digit verification code below:\n\u00A0\u00A0  </p>\n\n\u00A0\u00A0  <!-- FIXED OTP DISPLAY: Using the exact node name and simple .json.otp path -->\n\u00A0\u00A0  <div style=\"text-align: center; margin: 30px 0;\">\n\u00A0\u00A0\u00A0\u00A0  <span style=\"font-size: 32px; font-weight: bold; color: #007bff; background-color: #e9ecef; padding: 15px 30px; border-radius: 6px; letter-spacing: 5px; display: inline-block;\">\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0  {{ $node[\"Fetch OTP (POST /outbox-fetch)\"].json.otp }}\n\u00A0\u00A0\u00A0\u00A0  </span>\n\u00A0\u00A0  </div>\n\u00A0\u00A0  \n\u00A0\u00A0  <p style=\"font-size: 14px; color: #888;\">\n\u00A0\u00A0\u00A0\u00A0  This code is valid for a short period. If you did not request this code, please ignore this email.\n\u00A0\u00A0  </p>\n</div>",
-        "toEmail": "={{ $node[\"Webhook Trigger\"].json.body.email }}",
-        "fromEmail": "your.sender.email@gmail.com",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
-      "position": [
-        832,
-        0
-      ],
-      "id": "673f3248-285b-4351-8b22-0d19f854a8b7",
-      "name": "Send Email (Gmail)"
     }
   ],
   "pinData": {},
@@ -75,31 +114,48 @@
     "Webhook Trigger": {
       "main": [
         [
-          [
-            {
-              "node": "Fetch OTP (POST /outbox-fetch)",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          {
+            "node": "Fetch OTP from backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch OTP from backend": {
+      "main": [
+        [
+          {
+            "node": "Fetch OTP (POST /outbox-fetch)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Fetch OTP (POST /outbox-fetch)": {
       "main": [
         [
-          [
-            {
-              "node": "Send Email (Gmail)",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          {
+            "node": "Send Email (Gmail)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
   },
   "active": true,
-  "settings": {},
-  "versionId": "b18b6255-7313-43ef-afc0-a7d515a40a5a"
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "3fbf4151-e563-4692-af32-bf244a3e3dcd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9274e2ef697a0ae2e749adcb52e74707e06fbaf1bcb6ad71727b32cb97f84e11"
+  },
+  "id": "YZlbMh6vyNjAPBMz",
+  "tags": []
 }
