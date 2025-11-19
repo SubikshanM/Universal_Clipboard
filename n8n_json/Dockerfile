@@ -18,6 +18,4 @@ USER node
 # Expose the n8n port
 EXPOSE 5678
 
-# CRITICAL FIX: Aggressively set BOTH official n8n (DB_POSTGRES_CONNECTION_URL) 
-# and generic fallback (DATABASE_URL) variables to force the connection.
-ENTRYPOINT ["/bin/sh", "-c", "export DB_TYPE=postgresdb && export DB_POSTGRES_CONNECTION_URL=\"postgresql://neondb_owner:npg_YLQx5u7dsebV@ep-frosty-hill-ad1enk4j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" && export DATABASE_URL=\"postgresql://neondb_owner:npg_YLQx5u7dsebV@ep-frosty-hill-ad1enk4j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" && n8n start"]
+# The n8n default CMD from the base image will be used (starts n8n server)
