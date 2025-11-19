@@ -83,30 +83,12 @@ router.post('/request-signup-otp', async (req, res) => {
             [email, otpHash, passwordHash, username || null, expiresAt]
         );
 
-            // Also persist a short-lived plaintext OTP in an outbox table for integrations
-            // (e.g., n8n). This record is short-lived and will be deleted by the TTL worker.
-            try {
-                await db.query(
-                    `INSERT INTO signup_otp_outbox (email, otp_plain, expires_at) VALUES ($1, $2, $3)`,
-                    [email, otp, expiresAt]
-                );
-            } catch (e) {
-                // Outbox failure should not stop the signup OTP flow; just log
-                console.error('Failed to write OTP to outbox:', e);
-            }
-
-        // Send OTP via email (or log in dev mode).
-        // If OUTBOX_ONLY=true, we skip backend email sending so external systems
-        // (like n8n) can be the sole sender.
-        if (process.env.OUTBOX_ONLY !== 'true') {
-            try {
-                await sendOtpEmail(email, otp);
-            } catch (err) {
-                console.error('Failed to send OTP email:', err);
-                // continue — we still respond 200 to avoid leaking information
-            }
-        } else {
-            console.log('OUTBOX_ONLY=true, skipping backend email send; OTP written to outbox for integrations.');
+        // Send OTP via email directly from backend
+        try {
+            await sendOtpEmail(email, otp);
+        } catch (err) {
+            console.error('Failed to send OTP email:', err);
+            // continue — we still respond 200 to avoid leaking information
         }
 
         // Generic response to avoid user enumeration
@@ -150,23 +132,11 @@ router.post('/send-otp', async (req, res) => {
             [email, otpHash, null, username || null, expiresAt]
         );
 
-        // Also persist plaintext OTP into outbox for integrations (short-lived)
+        // Send email from backend directly
         try {
-            await db.query(
-                `INSERT INTO signup_otp_outbox (email, otp_plain, expires_at) VALUES ($1, $2, $3)`,
-                [email, otp, expiresAt]
-            );
-        } catch (e) {
-            console.error('Failed to write OTP to outbox (send-otp):', e);
-        }
-
-        // Optionally send email from backend unless OUTBOX_ONLY is set
-        if (process.env.OUTBOX_ONLY !== 'true') {
-            try {
-                await sendOtpEmail(email, otp);
-            } catch (err) {
-                console.error('Failed to send OTP email (send-otp):', err);
-            }
+            await sendOtpEmail(email, otp);
+        } catch (err) {
+            console.error('Failed to send OTP email (send-otp):', err);
         }
 
         // Generic response to avoid leaking information
@@ -278,51 +248,6 @@ router.post('/login', async (req, res) => {
 // Export the router immediately to make other endpoints available
 // NOTE: We move the module.exports to the top, right after the last synchronous route definition
 // This prevents the router object from being overridden.
-
-// --- Integration endpoint for secure retrieval of plaintext OTPs by internal systems ---
-// POST /api/auth/outbox-fetch
-// Body: { email: string }
-// Header: x-internal-api-key: <key>
-// This returns the latest non-consumed OTP for the given email if it exists and is not expired.
-router.post('/outbox-fetch', async (req, res) => {
-    // --- CRITICAL FIX START ---
-    // Change the expected key from INTERNAL_API_KEY to JWT_SECRET
-    // because that's what your Render environment is using for the secret.
-    const apiKey = req.header('x-internal-api-key') || '';
-    const expectedKey = process.env.JWT_SECRET;
-    
-    // Check if the expected key exists AND if the provided key matches
-    if (!expectedKey || apiKey !== expectedKey) {
-        // Log to server console to help debug
-        console.error("401 Unauthorized: API Key mismatch or missing. Expected key from JWT_SECRET.");
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    // --- CRITICAL FIX END ---
-
-    const { email } = req.body || {};
-    if (!email) return res.status(400).json({ error: 'Email is required.' });
-
-    try {
-        const outRes = await db.query(
-            `SELECT * FROM signup_otp_outbox WHERE email = $1 AND consumed = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1`,
-            [email]
-        );
-
-        if (outRes.rows.length === 0) {
-            return res.status(404).json({ error: 'No available OTP for this email.' });
-        }
-
-        const row = outRes.rows[0];
-
-        // Mark as consumed to prevent subsequent retrievals
-        await db.query('UPDATE signup_otp_outbox SET consumed = true WHERE id = $1', [row.id]);
-
-        return res.status(200).json({ otp: row.otp_plain, expires_at: row.expires_at });
-    } catch (err) {
-        console.error('Error in outbox-fetch:', err);
-        return res.status(500).json({ error: 'Internal server error.' });
-    }
-});
 
 // -----------------------
 // Development helper: decode/verify a Bearer token
