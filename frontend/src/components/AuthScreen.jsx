@@ -49,9 +49,14 @@ const AuthScreen = () => {
         if (signupStep === 'enterDetails') {
           // Request OTP from the server
           try {
-            const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+            // Ensure API base includes the /api/auth path so requests go to the correct backend route
+            const rawApi = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
               ? import.meta.env.VITE_API_URL
-              : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+              : 'https://universal-clipboard-q6po.onrender.com';
+            const API_URL = rawApi.endsWith('/api/auth') ? rawApi : (rawApi.replace(/\/+$/,'') + '/api/auth');
+
+            // Diagnostic log to help debug deployed env values — remove in production
+            console.log('Requesting signup OTP to:', `${API_URL}/request-signup-otp`, { email });
 
             await axios.post(`${API_URL}/request-signup-otp`, { email, password });
             setSignupStep('enterOtp');
@@ -76,10 +81,12 @@ const AuthScreen = () => {
         } else if (signupStep === 'enterOtp') {
           // Verify OTP
           try {
-            const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+            const rawApi = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
               ? import.meta.env.VITE_API_URL
-              : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+              : 'https://universal-clipboard-q6po.onrender.com';
+            const API_URL = rawApi.endsWith('/api/auth') ? rawApi : (rawApi.replace(/\/+$/,'') + '/api/auth');
 
+            console.log('Verifying signup OTP to:', `${API_URL}/verify-signup-otp`, { email });
             await axios.post(`${API_URL}/verify-signup-otp`, { email, otp });
             setNotice({ type: 'success', text: 'Signup verified. Please login with your credentials.' });
             setSubmitState('success');
@@ -113,9 +120,11 @@ const AuthScreen = () => {
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     try {
-      const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+      const rawApi = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
         ? import.meta.env.VITE_API_URL
-        : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+        : 'https://universal-clipboard-q6po.onrender.com';
+      const API_URL = rawApi.endsWith('/api/auth') ? rawApi : (rawApi.replace(/\/+$/,'') + '/api/auth');
+      console.log('Resend OTP to:', `${API_URL}/request-signup-otp`, { email });
       await axios.post(`${API_URL}/request-signup-otp`, { email, password });
       setNotice({ type: 'info', text: 'OTP resent. Check your email.' });
       setResendCooldown(60);
