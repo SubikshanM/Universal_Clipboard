@@ -7,7 +7,7 @@ ENV N8N_PORT=5678
 # Use root to copy files then switch back to node user
 USER root
 
-# Create the .n8n directory if it doesn't exist and copy workflow file
+# Create the .n8n directory if it doesn't exist and copy workflow file so n8n can load it
 RUN mkdir -p /home/node/.n8n
 COPY otp-workflow.json /home/node/.n8n/otp-workflow.json
 RUN chown -R node:node /home/node/.n8n || true
@@ -18,7 +18,5 @@ USER node
 # Expose the n8n port
 EXPOSE 5678
 
-# CRITICAL FIX: Replace the default CMD with an explicit ENTRYPOINT.
-# This forces the DB_TYPE to be set to postgresdb before running 'n8n start'.
-# This should stop the connection attempt to the local address (::1:5432).
-ENTRYPOINT ["/bin/sh", "-c", "export DB_TYPE=postgresdb && n8n start"]
+# CRITICAL FIX: This ENTRYPOINT forces the database connection.
+ENTRYPOINT ["/bin/sh", "-c", "export DB_TYPE=postgresdb && export DB_POSTGRES_CONNECTION_URL=\"postgresql://neondb_owner:npg_YLQx5u7dsebV@ep-frosty-hill-ad1enk4j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" && n8n start"]
