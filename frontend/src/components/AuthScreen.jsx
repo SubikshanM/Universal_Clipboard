@@ -24,6 +24,8 @@ export default function AuthScreen() {
   const [resetStep, setResetStep] = useState('enterEmail'); // enterEmail | enterOtp
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   // UI helpers
   const [notice, setNotice] = useState(null);
@@ -256,8 +258,14 @@ export default function AuthScreen() {
           {/* New password fields shown during reset after OTP verified */}
           {isResetFlow && resetStep === 'enterNewPassword' && (
             <>
-              <input type="password" placeholder="New password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required autoComplete="new-password" name="new-password" style={{ ...styles.input }} />
-              <input type="password" placeholder="Confirm new password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} required autoComplete="new-password" name="confirm-new-password" style={{ ...styles.input }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input type={showNewPassword ? 'text' : 'password'} placeholder="New password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required autoComplete="new-password" name="new-password" style={{ ...styles.input, flex: 1 }} />
+                <button type="button" onClick={() => setShowNewPassword(s => !s)} aria-pressed={showNewPassword} aria-label={showNewPassword ? 'Hide new password' : 'Show new password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showNewPassword ? 'Hide' : 'Show'}</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input type={showConfirmNewPassword ? 'text' : 'password'} placeholder="Confirm new password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} required autoComplete="new-password" name="confirm-new-password" style={{ ...styles.input, flex: 1 }} />
+                <button type="button" onClick={() => setShowConfirmNewPassword(s => !s)} aria-pressed={showConfirmNewPassword} aria-label={showConfirmNewPassword ? 'Hide confirm password' : 'Show confirm password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showConfirmNewPassword ? 'Hide' : 'Show'}</button>
+              </div>
             </>
           )}
 
@@ -266,14 +274,16 @@ export default function AuthScreen() {
             <p style={{ fontSize: '13px', color: '#666666', marginTop: '6px' }}>Please wait for the OTP — it may take several seconds to arrive. If you don't see it, check your spam folder.</p>
           )}
 
-          <button type="submit" disabled={loading || submitState === 'loading' || (isResetFlow && resetStep === 'enterOtp')} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
-            <span className="btn-inner">
-              <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
-              <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
-                <path d="M20.285 6.708l-11.39 11.39-5.18-5.18 1.414-1.414 3.766 3.766 9.976-9.977z" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </button>
+          {!(isResetFlow && resetStep === 'enterOtp') && (
+            <button type="submit" disabled={loading || submitState === 'loading'} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
+              <span className="btn-inner">
+                <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
+                <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M20.285 6.708l-11.39 11.39-5.18-5.18 1.414-1.414 3.766 3.766 9.976-9.977z" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </button>
+          )}
         </form>
 
         <div style={styles.switchText}>
