@@ -278,6 +278,35 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
+// POST /api/auth/verify-password-reset-otp
+// Verify a password-reset OTP without changing the password. This allows the frontend to
+// confirm the OTP before showing new-password inputs. Does NOT mark the OTP used.
+router.post('/verify-password-reset-otp', async (req, res) => {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required.' });
+
+    try {
+        const otpRes = await db.query(
+            `SELECT * FROM password_reset_otps WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1`,
+            [email]
+        );
+
+        if (otpRes.rows.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired OTP.' });
+        }
+
+        const otpRow = otpRes.rows[0];
+        const match = await bcrypt.compare(otp, otpRow.otp_hash);
+        if (!match) return res.status(400).json({ error: 'Invalid OTP.' });
+
+        // OTP is valid; return success without consuming it
+        return res.status(200).json({ message: 'OTP valid.' });
+    } catch (err) {
+        console.error('Error in verify-password-reset-otp:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
 // POST /api/auth/signup-otp
 // Generate an OTP for signup and write to outbox table for internal backend retrieval.
 // Also sends the OTP email directly via backend email.js

@@ -84,6 +84,21 @@ export default function AuthScreen() {
     }
   };
 
+  // Verify the password-reset OTP (separate step before entering new password)
+  const verifyResetOtp = async () => {
+    try {
+      setSubmitState('loading');
+      const API_URL = apiBase();
+      await axios.post(`${API_URL}/verify-password-reset-otp`, { email, otp });
+      setNotice({ type: 'success', text: 'OTP verified. Enter your new password below.' });
+      setResetStep('enterNewPassword');
+      setSubmitState('idle');
+    } catch (err) {
+      setNotice({ type: 'error', text: err.response?.data?.error || 'OTP verification failed.' });
+      setSubmitState('idle');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitState('loading');
@@ -224,14 +239,22 @@ export default function AuthScreen() {
 
           {/* OTP inputs for signup or reset */}
           {((!isLogin && signupStep === 'enterOtp') || (isResetFlow && resetStep === 'enterOtp')) && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input type="text" placeholder="Enter OTP" value={otp} onChange={e => setOtp(e.target.value)} required autoComplete="one-time-code" name="otp" style={{ ...styles.input, flex: 1 }} />
-              <button type="button" onClick={handleResend} disabled={resendCooldown > 0} style={{ padding: '8px 10px', borderRadius: '4px', cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer' }}>{resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend'}</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input type="text" placeholder="Enter OTP" value={otp} onChange={e => setOtp(e.target.value)} required autoComplete="one-time-code" name="otp" style={{ ...styles.input, flex: 1 }} />
+                <button type="button" onClick={handleResend} disabled={resendCooldown > 0} style={{ padding: '8px 10px', borderRadius: '4px', cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer' }}>{resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend'}</button>
+              </div>
+              {/* When in reset OTP step, show a Verify OTP button so users must explicitly verify before entering new password */}
+              {isResetFlow && resetStep === 'enterOtp' && (
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button type="button" onClick={verifyResetOtp} disabled={submitState === 'loading'} style={{ ...styles.button, padding: '8px 16px', minWidth: 140 }}>Verify OTP</button>
+                </div>
+              )}
             </div>
           )}
 
-          {/* New password fields shown during reset after OTP requested */}
-          {isResetFlow && resetStep === 'enterOtp' && (
+          {/* New password fields shown during reset after OTP verified */}
+          {isResetFlow && resetStep === 'enterNewPassword' && (
             <>
               <input type="password" placeholder="New password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required autoComplete="new-password" name="new-password" style={{ ...styles.input }} />
               <input type="password" placeholder="Confirm new password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} required autoComplete="new-password" name="confirm-new-password" style={{ ...styles.input }} />
@@ -243,9 +266,9 @@ export default function AuthScreen() {
             <p style={{ fontSize: '13px', color: '#666666', marginTop: '6px' }}>Please wait for the OTP — it may take several seconds to arrive. If you don't see it, check your spam folder.</p>
           )}
 
-          <button type="submit" disabled={loading || submitState === 'loading'} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
+          <button type="submit" disabled={loading || submitState === 'loading' || (isResetFlow && resetStep === 'enterOtp')} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
             <span className="btn-inner">
-              <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : 'Reset Password') : (isLogin ? 'Login' : (signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
+              <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
               <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
                 <path d="M20.285 6.708l-11.39 11.39-5.18-5.18 1.414-1.414 3.766 3.766 9.976-9.977z" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
