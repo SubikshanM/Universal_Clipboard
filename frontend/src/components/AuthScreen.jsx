@@ -15,9 +15,12 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
 
   // Signup states
-  const [signupStep, setSignupStep] = useState('enterDetails'); // enterDetails | enterOtp
+  const [signupStep, setSignupStep] = useState('enterEmail'); // enterEmail | enterOtp | enterPassword
   const [otp, setOtp] = useState('');
 
   // Reset states
@@ -76,8 +79,8 @@ export default function AuthScreen() {
       if (isResetFlow) {
         await axios.post(`${API_URL}/request-password-reset`, { email });
       } else if (!isLogin) {
-        // signup resend
-        await axios.post(`${API_URL}/request-signup-otp`, { email, password });
+        // signup resend (email-first flow) - request a signup OTP without password
+        await axios.post(`${API_URL}/send-otp`, { email });
       }
       setNotice({ type: 'info', text: 'OTP resent. Check your email.' });
       startResendCooldown(60);
@@ -94,6 +97,21 @@ export default function AuthScreen() {
       await axios.post(`${API_URL}/verify-password-reset-otp`, { email, otp });
       setNotice({ type: 'success', text: 'OTP verified. Enter your new password below.' });
       setResetStep('enterNewPassword');
+      setSubmitState('idle');
+    } catch (err) {
+      setNotice({ type: 'error', text: err.response?.data?.error || 'OTP verification failed.' });
+      setSubmitState('idle');
+    }
+  };
+
+  // Verify signup OTP (email-first flow) before collecting password
+  const verifySignupOtp = async () => {
+    try {
+      setSubmitState('loading');
+      const API_URL = apiBase();
+      await axios.post(`${API_URL}/verify-signup-otp`, { email, otp });
+      setNotice({ type: 'success', text: 'OTP verified. Enter a password to complete signup.' });
+      setSignupStep('enterPassword');
       setSubmitState('idle');
     } catch (err) {
       setNotice({ type: 'error', text: err.response?.data?.error || 'OTP verification failed.' });
@@ -157,24 +175,46 @@ export default function AuthScreen() {
         return;
       }
 
-      // Signup flow
-      if (signupStep === 'enterDetails') {
-        // show otp input and request otp
+      // Signup flow (email-first)
+      if (signupStep === 'enterDetails' || signupStep === 'enterEmail') {
+        // Request an OTP for the provided email (email-first flow)
         setSignupStep('enterOtp');
         setNotice({ type: 'info', text: 'Requesting OTP — please wait. It may take several seconds to arrive.' });
-        await axios.post(`${API_URL}/request-signup-otp`, { email, password });
-        setNotice({ type: 'info', text: 'OTP sent to your email. Enter it below to verify.' });
+        await axios.post(`${API_URL}/send-otp`, { email });
+        setNotice({ type: 'info', text: 'If the email is valid, an OTP has been sent. Enter it below.' });
         startResendCooldown(60);
         setSubmitState('idle');
         return;
       }
 
-      // signupStep === 'enterOtp' -> verify
+      // signupStep === 'enterOtp' -> verify OTP (do not create user yet)
       if (signupStep === 'enterOtp') {
         await axios.post(`${API_URL}/verify-signup-otp`, { email, otp });
-        setNotice({ type: 'success', text: 'Signup verified. Please login with your credentials.' });
-        try { if (window.__showToast) window.__showToast('Signup successful — Welcome to Universal Clipboard', 'success'); } catch (e) {}
-        setTimeout(() => { setIsLogin(true); setSignupStep('enterDetails'); setOtp(''); setPassword(''); setSubmitState('idle'); }, 1200);
+        setNotice({ type: 'success', text: 'OTP verified. Enter a password to complete signup.' });
+        setSignupStep('enterPassword');
+        setSubmitState('idle');
+        return;
+      }
+
+      // signupStep === 'enterPassword' -> finalize signup
+      if (signupStep === 'enterPassword') {
+        // Validate password and confirmation
+        if (!password || password.length < 6) {
+          setNotice({ type: 'error', text: 'Password must be at least 6 characters.' });
+          setSubmitState('idle');
+          return;
+        }
+        if (password !== signupConfirmPassword) {
+          setNotice({ type: 'error', text: 'Password and confirmation do not match.' });
+          setSubmitState('idle');
+          return;
+        }
+
+        // Complete signup by sending password + otp
+        await axios.post(`${API_URL}/complete-signup`, { email, otp, password });
+        setNotice({ type: 'success', text: 'Signup complete. Please login with your credentials.' });
+        try { if (window.__showToast) window.__showToast('Signup complete — please login', 'success'); } catch (e) {}
+  setTimeout(() => { setIsLogin(true); setSignupStep('enterEmail'); setOtp(''); setPassword(''); setSignupConfirmPassword(''); setSubmitState('idle'); }, 1200);
         return;
       }
 
@@ -224,19 +264,53 @@ export default function AuthScreen() {
 
           {/* Password input hidden when initiating reset (first step) */}
           {!isResetFlow && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                name={isLogin ? 'current-password' : 'new-password'}
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
-                style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}`, flex: 1 }}
-              />
-              <button type="button" onClick={() => setShowPassword(s => !s)} aria-pressed={showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showPassword ? 'Hide' : 'Show'}</button>
-            </div>
+            isLogin ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  name={'current-password'}
+                  autoComplete={'current-password'}
+                  style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}`, flex: 1 }}
+                />
+                <button type="button" onClick={() => setShowPassword(s => !s)} aria-pressed={showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showPassword ? 'Hide' : 'Show'}</button>
+              </div>
+            ) : (
+              // Signup - enter details step shows password + confirm password
+              signupStep === 'enterPassword' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type={showSignupPassword ? 'text' : 'password'}
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      name={'signup-password'}
+                      autoComplete={'new-password'}
+                      style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}`, flex: 1 }}
+                    />
+                    <button type="button" onClick={() => setShowSignupPassword(s => !s)} aria-pressed={showSignupPassword} aria-label={showSignupPassword ? 'Hide password' : 'Show password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showSignupPassword ? 'Hide' : 'Show'}</button>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type={showSignupConfirmPassword ? 'text' : 'password'}
+                      placeholder="Confirm password"
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                      required
+                      name={'signup-confirm-password'}
+                      autoComplete={'new-password'}
+                      style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}`, flex: 1 }}
+                    />
+                    <button type="button" onClick={() => setShowSignupConfirmPassword(s => !s)} aria-pressed={showSignupConfirmPassword} aria-label={showSignupConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showSignupConfirmPassword ? 'Hide' : 'Show'}</button>
+                  </div>
+                </>
+              )
+            )
           )}
 
           {/* OTP inputs for signup or reset */}
@@ -277,7 +351,7 @@ export default function AuthScreen() {
           {!(isResetFlow && resetStep === 'enterOtp') && (
             <button type="submit" disabled={loading || submitState === 'loading'} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
               <span className="btn-inner">
-                <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
+                <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterEmail' || signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
                 <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
                   <path d="M20.285 6.708l-11.39 11.39-5.18-5.18 1.414-1.414 3.766 3.766 9.976-9.977z" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -291,11 +365,13 @@ export default function AuthScreen() {
             <>
               <div>
                 <span>Don't have an account? </span>
-                <button onClick={() => {
-                    setIsLogin(prev => !prev);
-                    setIsResetFlow(false);
+        <button onClick={() => {
+          setIsLogin(prev => !prev);
+          setIsResetFlow(false);
+          setSignupStep('enterEmail');
                     // clear sensitive fields when switching modes to avoid autofill/populated values
-                    setPassword(''); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); setNotice(null);
+                    setPassword(''); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); setSignupConfirmPassword(''); setNotice(null);
+                    setShowSignupPassword(false); setShowSignupConfirmPassword(false);
                   }} style={{ ...styles.switchButton, color: isDark ? '#9fd3ff' : '#007bff' }}>{'Signup'}</button>
               </div>
               <div style={{ marginTop: 8 }}>
@@ -304,13 +380,14 @@ export default function AuthScreen() {
                     setIsResetFlow(true);
                     setResetStep('enterEmail');
                     // clear any credentials so the reset flow starts fresh
-                    setPassword(''); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); setNotice(null);
+                    setPassword(''); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); setSignupConfirmPassword(''); setNotice(null);
+                    setShowSignupPassword(false); setShowSignupConfirmPassword(false);
                   }} style={{ ...styles.switchButton, marginLeft: 8 }}>{'Forgot password?'}</button>
               </div>
             </>
           ) : isLogin && isResetFlow ? (
             <div>
-              <button onClick={() => { setIsResetFlow(false); setResetStep('enterEmail'); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); }} style={{ ...styles.switchButton, marginLeft: 8 }}>Cancel</button>
+              <button onClick={() => { setIsResetFlow(false); setResetStep('enterEmail'); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); setSignupConfirmPassword(''); setShowSignupPassword(false); setShowSignupConfirmPassword(false); }} style={{ ...styles.switchButton, marginLeft: 8 }}>Cancel</button>
             </div>
           ) : (
             <div>

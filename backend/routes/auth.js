@@ -423,33 +423,63 @@ router.post('/verify-signup-otp', async (req, res) => {
         }
 
         const otpRow = otpRes.rows[0];
-
         const match = await bcrypt.compare(otp, otpRow.otp_hash);
         if (!match) {
             return res.status(400).json({ error: 'Invalid OTP.' });
         }
 
+        // OTP is valid — do not consume it here. Frontend will call /complete-signup with a password
+        // to actually create the account.
+        return res.status(200).json({ message: 'OTP valid.' });
+
+    } catch (err) {
+        console.error('Error in verify-signup-otp:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/complete-signup
+// Finalize signup by verifying OTP and creating the user with the supplied password.
+router.post('/complete-signup', async (req, res) => {
+    const { email, otp, password, username } = req.body || {};
+    if (!email || !otp || !password) return res.status(400).json({ error: 'Email, OTP and password are required.' });
+
+    try {
+        // Find the most recent, unused, unexpired signup OTP
+        const otpRes = await db.query(
+            `SELECT * FROM signup_otps WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1`,
+            [email]
+        );
+
+        if (otpRes.rows.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired OTP.' });
+        }
+
+        const otpRow = otpRes.rows[0];
+        const match = await bcrypt.compare(otp, otpRow.otp_hash);
+        if (!match) return res.status(400).json({ error: 'Invalid OTP.' });
+
         // Ensure user does not already exist
         const existRes = await db.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existRes.rows.length > 0) {
-            // Mark OTP used to prevent replays and return generic message
+            // Mark OTP used to prevent replays
             await db.query('UPDATE signup_otps SET used = true WHERE id = $1', [otpRow.id]);
             return res.status(409).json({ error: 'An account with this email already exists.' });
         }
 
-        // Create the user with the previously-stored password_hash and optional username
+        // Hash the supplied password and create the user record
+        const passwordHash = await bcrypt.hash(password, saltRounds);
         const insertRes = await db.query(
             'INSERT INTO users (email, password_hash, username) VALUES ($1, $2, $3) RETURNING id',
-            [email, otpRow.password_hash, otpRow.username || null]
+            [email, passwordHash, username || otpRow.username || null]
         );
 
         // Mark the OTP record used
         await db.query('UPDATE signup_otps SET used = true WHERE id = $1', [otpRow.id]);
 
-        return res.status(201).json({ message: 'Signup verified. Please login using your credentials.' });
-
+        return res.status(201).json({ message: 'Signup complete. Please login with your credentials.' });
     } catch (err) {
-        console.error('Error in verify-signup-otp:', err);
+        console.error('Error in complete-signup:', err);
         return res.status(500).json({ error: 'Internal server error.' });
     }
 });
