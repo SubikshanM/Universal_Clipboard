@@ -211,10 +211,11 @@ export default function AuthScreen() {
         }
 
         // Complete signup by sending password + otp
-        await axios.post(`${API_URL}/complete-signup`, { email, otp, password });
-        setNotice({ type: 'success', text: 'Signup complete. Please login with your credentials.' });
-        try { if (window.__showToast) window.__showToast('Signup complete — please login', 'success'); } catch (e) {}
-  setTimeout(() => { setIsLogin(true); setSignupStep('enterEmail'); setOtp(''); setPassword(''); setSignupConfirmPassword(''); setSubmitState('idle'); }, 1200);
+    await axios.post(`${API_URL}/complete-signup`, { email, otp, password });
+    // Use the user's requested success message
+    setNotice({ type: 'success', text: 'Signup successful — welcome to Universal Clipboard' });
+    try { if (window.__showToast) window.__showToast('Signup successful — welcome to Universal Clipboard', 'success'); } catch (e) {}
+    setTimeout(() => { setIsLogin(true); setSignupStep('enterEmail'); setOtp(''); setPassword(''); setSignupConfirmPassword(''); setSubmitState('idle'); }, 1200);
         return;
       }
 
@@ -351,7 +352,7 @@ export default function AuthScreen() {
           {!(isResetFlow && resetStep === 'enterOtp') && (
             <button type="submit" disabled={loading || submitState === 'loading'} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
               <span className="btn-inner">
-                <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterEmail' || signupStep === 'enterDetails' ? 'Send OTP' : 'Signup'))}</span>
+                <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterEmail' || signupStep === 'enterDetails' ? 'Send OTP' : (signupStep === 'enterOtp' ? 'Verify OTP' : 'Signup')))}</span>
                 <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
                   <path d="M20.285 6.708l-11.39 11.39-5.18-5.18 1.414-1.414 3.766 3.766 9.976-9.977z" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
