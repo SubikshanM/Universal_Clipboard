@@ -15,6 +15,7 @@ const AuthScreen = () => {
   const [password, setPassword] = useState('');
   const [signupStep, setSignupStep] = useState('enterDetails'); // 'enterDetails' | 'enterOtp'
   const [otp, setOtp] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const resendTimerRef = useRef(null);
   
@@ -49,7 +50,7 @@ const AuthScreen = () => {
         if (signupStep === 'enterDetails') {
           // Immediately show the OTP input container so the user can paste/enter the code
           setSignupStep('enterOtp');
-          setNotice({ type: 'info', text: 'Requesting OTP — please wait. It may take a minute to arrive.' });
+          setNotice({ type: 'info', text: 'Requesting OTP — please wait. It may take several seconds to arrive.' });
 
           // Request OTP from the server (perform after UI update so OTP input appears instantly)
           try {
@@ -96,6 +97,12 @@ const AuthScreen = () => {
             await axios.post(`${API_URL}/verify-signup-otp`, { email, otp });
             setNotice({ type: 'success', text: 'Signup verified. Please login with your credentials.' });
             setSubmitState('success');
+            // Show a global floating toast (same style as Login) to welcome the new user
+            try {
+              if (window.__showToast) {
+                window.__showToast('Signup successful — Welcome to Universal Clipboard', 'success');
+              }
+            } catch (e) {}
             // Reset to login mode after short delay
             setTimeout(() => {
               setIsLogin(true);
@@ -189,14 +196,25 @@ const AuthScreen = () => {
             required
             style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}`, flex: 1 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-pressed={showPassword}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
 
           {/* OTP input shown during signup second step */}
           {!isLogin && signupStep === 'enterOtp' && (
@@ -222,7 +240,7 @@ const AuthScreen = () => {
           {/* Informational note when OTP step is visible */}
           {!isLogin && signupStep === 'enterOtp' && (
             <p style={{ fontSize: '13px', color: '#666666', marginTop: '6px' }}>
-              Please wait for the OTP — it may take up to a minute to arrive. If you don't see it, check your spam folder.
+          Please wait for the OTP — it may take several seconds to arrive. If you don't see it, check your spam folder.
             </p>
           )}
 
@@ -328,6 +346,14 @@ const styles = {
     padding: '0',
     fontSize: '14px',
     textDecoration: 'underline'
+  }
+  ,
+  pwdToggle: {
+    padding: '6px 8px',
+    color: '#007bff',
+    cursor: 'pointer',
+    fontSize: '14px',
+    background: 'transparent'
   }
 };
 
