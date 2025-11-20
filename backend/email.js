@@ -1,5 +1,7 @@
 // email.js - nodemailer helper for sending OTP emails
 const nodemailer = require('nodemailer');
+// Prefer SendGrid Web API when possible to avoid SMTP port/connectivity issues on some hosts
+let sgMail = null;
 require('dotenv').config();
 
 const SMTP_HOST = process.env.SMTP_HOST;
@@ -7,25 +9,37 @@ const SMTP_PORT = process.env.SMTP_PORT;
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 let EMAIL_FROM = process.env.EMAIL_FROM || 'Universal Clipboard <no-reply@localhost>';
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY; // optional
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY; // optional (preferred)
 const SENDGRID_SENDER_EMAIL = process.env.SENDGRID_SENDER_EMAIL; // optional override for from address
+if (SENDGRID_API_KEY) {
+  try {
+    sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(SENDGRID_API_KEY);
+  } catch (e) {
+    console.warn('SendGrid package not installed; falling back to SMTP. To use SendGrid API install @sendgrid/mail.');
+    sgMail = null;
+  }
+}
 const DEBUG_EMAIL_MODE = process.env.DEBUG_EMAIL_MODE === 'true';
 
 let transporter = null;
 
-// Prefer SendGrid API key (via SMTP) when provided
-if (SENDGRID_API_KEY) {
-  // If a specific sender email for SendGrid is provided, prefer that
+// If SendGrid Web API is available prefer it (uses HTTPS/443, more reliable on hosted platforms)
+if (sgMail) {
   if (SENDGRID_SENDER_EMAIL) {
     EMAIL_FROM = SENDGRID_SENDER_EMAIL;
   }
-
+} else if (SENDGRID_API_KEY) {
+  // If @sendgrid/mail not installed, fall back to SMTP bridge
+  if (SENDGRID_SENDER_EMAIL) {
+    EMAIL_FROM = SENDGRID_SENDER_EMAIL;
+  }
   transporter = nodemailer.createTransport({
     host: 'smtp.sendgrid.net',
     port: 587,
     secure: false,
     auth: {
-      user: 'apikey', // per SendGrid SMTP docs
+      user: 'apikey',
       pass: SENDGRID_API_KEY
     }
   });
@@ -50,6 +64,25 @@ async function sendOtpEmail(toEmail, otpCode) {
   // Always log the OTP when DEBUG_EMAIL_MODE is enabled (useful for testing)
   if (DEBUG_EMAIL_MODE) {
     console.log(`[DEBUG EMAIL] OTP for ${toEmail}: ${otpCode}`);
+  }
+
+  // If SendGrid Web API is available, use it (HTTPS)
+  if (sgMail) {
+    const msg = {
+      to: toEmail,
+      from: EMAIL_FROM,
+      subject,
+      text,
+      html
+    };
+    try {
+      const response = await sgMail.send(msg);
+      console.log(`OTP email sent to ${toEmail} via SendGrid Web API`);
+      return response;
+    } catch (err) {
+      console.error('Error sending OTP email via SendGrid Web API:', err);
+      // fall through to try SMTP transporter if available
+    }
   }
 
   // If transporter is not configured, fall back to logging-only behavior
