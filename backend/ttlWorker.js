@@ -1,4 +1,3 @@
-// ttlWorker.js
 const db = require('./db');
 
 // Make cleanup interval configurable via env var, default 60 seconds
@@ -22,7 +21,8 @@ const runCleanup = async () => {
         console.log(`[TTL Worker] Cleanup complete. Deleted ${result.rowCount} expired clip(s).`);
 
     } catch (err) {
-        console.error('[TTL Worker] Fatal error during cleanup:', err.stack);
+        // Log stack trace only if connection is confirmed established, otherwise just log message
+        console.error('[TTL Worker] Fatal error during clipboard cleanup:', err.message); 
     }
 };
 
@@ -46,25 +46,40 @@ const runOutboxCleanup = async () => {
         console.log(`[TTL Worker] Outbox cleanup complete. Deleted ${expiredResult.rowCount} expired, ${consumedResult.rowCount} old consumed OTP(s).`);
 
     } catch (err) {
-        console.error('[TTL Worker] Error during outbox cleanup:', err.stack);
+        // Log stack trace only if connection is confirmed established, otherwise just log message
+        console.error('[TTL Worker] Error during outbox cleanup:', err.message);
     }
 };
 
-// Start the worker loop
-const startWorker = (intervalSeconds = CLEANUP_INTERVAL_SECONDS) => {
+// --- NEW CODE: Initialization and Delay Wrapper ---
+
+// The worker loop function, separated from initialization
+const workerLoop = () => {
     // Run the cleanup immediately when the worker starts
     runCleanup();
     runOutboxCleanup();
     
     // Set up the cleanup function to run every 'intervalSeconds'
-    const intervalMs = intervalSeconds * 1000;
+    const intervalMs = CLEANUP_INTERVAL_SECONDS * 1000;
     
-    console.log(`[TTL Worker] Started. Running cleanup every ${intervalSeconds} seconds...`);
     setInterval(() => {
         runCleanup();
         runOutboxCleanup();
     }, intervalMs);
 };
 
-// Start the worker
-startWorker();
+
+const initializeWorker = async () => {
+    console.log('[TTL Worker] Initializing with a 30-second delay to allow main web service to create relations...');
+    
+    // Wait for 30 seconds (30000 milliseconds)
+    await new Promise(resolve => setTimeout(resolve, 30000)); 
+    
+    console.log(`[TTL Worker] Delay complete. Starting worker loop. Running cleanup every ${CLEANUP_INTERVAL_SECONDS} seconds...`);
+
+    // Start the actual cleanup loop now that the delay is over
+    workerLoop();
+};
+
+// Start the initialization process instead of running the cleanup immediately
+initializeWorker();
