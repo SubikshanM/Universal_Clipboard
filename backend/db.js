@@ -111,13 +111,24 @@ async function createTables() {
       ON signup_otps (email, created_at DESC);
   `;
 
-  // Outbox table removed - backend sends emails directly via SMTP
+  // Outbox table for storing plaintext OTPs temporarily for internal retrieval
+  const createSignupOtpOutbox = `
+    CREATE TABLE IF NOT EXISTS signup_otp_outbox (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      otp_plain VARCHAR(20) NOT NULL,
+      expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+      consumed BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
 
   try {
     // Use the pool to run the queries sequentially
   await pool.query(createUsers);
   await pool.query(createClipboard);
   await pool.query(createSignupOtps);
+  await pool.query(createSignupOtpOutbox);
   await pool.query(createSignupOtpsIndex);
     console.log('Database tables are ready.');
   } catch (err) {

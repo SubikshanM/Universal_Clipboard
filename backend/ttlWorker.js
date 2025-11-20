@@ -26,16 +26,44 @@ const runCleanup = async () => {
     }
 };
 
+// Cleanup function for signup_otp_outbox table
+const runOutboxCleanup = async () => {
+    try {
+        // Delete expired entries
+        const expiredQuery = `
+            DELETE FROM signup_otp_outbox
+            WHERE expires_at < NOW()
+        `;
+        const expiredResult = await db.query(expiredQuery);
+        
+        // Delete old consumed entries (older than 1 hour)
+        const consumedQuery = `
+            DELETE FROM signup_otp_outbox
+            WHERE consumed = true AND created_at < NOW() - INTERVAL '1 hour'
+        `;
+        const consumedResult = await db.query(consumedQuery);
+        
+        console.log(`[TTL Worker] Outbox cleanup complete. Deleted ${expiredResult.rowCount} expired, ${consumedResult.rowCount} old consumed OTP(s).`);
+
+    } catch (err) {
+        console.error('[TTL Worker] Error during outbox cleanup:', err.stack);
+    }
+};
+
 // Start the worker loop
 const startWorker = (intervalSeconds = CLEANUP_INTERVAL_SECONDS) => {
     // Run the cleanup immediately when the worker starts
-    runCleanup(); 
+    runCleanup();
+    runOutboxCleanup();
     
     // Set up the cleanup function to run every 'intervalSeconds'
     const intervalMs = intervalSeconds * 1000;
     
     console.log(`[TTL Worker] Started. Running cleanup every ${intervalSeconds} seconds...`);
-    setInterval(runCleanup, intervalMs);
+    setInterval(() => {
+        runCleanup();
+        runOutboxCleanup();
+    }, intervalMs);
 };
 
 // Start the worker

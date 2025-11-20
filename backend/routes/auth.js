@@ -147,6 +147,104 @@ router.post('/send-otp', async (req, res) => {
     }
 });
 
+// POST /api/auth/signup-otp
+// Generate an OTP for signup and write to outbox table for internal backend retrieval.
+// Also sends the OTP email directly via backend email.js
+router.post('/signup-otp', async (req, res) => {
+    const { email, password, username } = req.body || {};
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    try {
+        // Rate-limit: count recent OTPs for this email in the last hour
+        const rateRes = await db.query(
+            `SELECT COUNT(*)::int AS cnt FROM signup_otps WHERE email = $1 AND created_at > NOW() - INTERVAL '1 hour'`,
+            [email]
+        );
+        const recentCount = parseInt(rateRes.rows[0].cnt, 10) || 0;
+        if (recentCount >= OTP_RATE_LIMIT_PER_HOUR) {
+            return res.status(429).json({ error: 'Too many OTP requests for this email. Please try again later.' });
+        }
+
+        // Generate a 6-digit numeric OTP
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+        // Hash OTP and password
+        const otpHash = await bcrypt.hash(otp, saltRounds);
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        const expiresAt = new Date(Date.now() + OTP_EXPIRATION_MINUTES * 60 * 1000);
+
+        // Persist the OTP entry in signup_otps table
+        await db.query(
+            `INSERT INTO signup_otps (email, otp_hash, password_hash, username, expires_at) VALUES ($1,$2,$3,$4,$5)`,
+            [email, otpHash, passwordHash, username || null, expiresAt]
+        );
+
+        // Write plaintext OTP to outbox table for internal retrieval
+        await db.query(
+            `INSERT INTO signup_otp_outbox (email, otp_plain, expires_at) VALUES ($1,$2,$3)`,
+            [email, otp, expiresAt]
+        );
+
+        // Send OTP via email directly from backend
+        try {
+            await sendOtpEmail(email, otp);
+        } catch (err) {
+            console.error('Failed to send OTP email:', err);
+            // continue — we still respond 200 to avoid leaking information
+        }
+
+        // Generic response to avoid user enumeration
+        return res.status(200).json({ message: 'If the email is valid an OTP has been sent.' });
+    } catch (err) {
+        console.error('Error in signup-otp:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/outbox-fetch
+// Internal endpoint for retrieving plaintext OTPs from outbox table.
+// Returns the latest non-consumed unexpired OTP for the given email and marks it consumed.
+router.post('/outbox-fetch', async (req, res) => {
+    const { email } = req.body || {};
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    try {
+        // Fetch the most recent non-consumed, unexpired OTP for this email
+        const outboxRes = await db.query(
+            `SELECT id, otp_plain, expires_at FROM signup_otp_outbox 
+             WHERE email = $1 AND consumed = false AND expires_at > NOW() 
+             ORDER BY created_at DESC LIMIT 1`,
+            [email]
+        );
+
+        if (outboxRes.rows.length === 0) {
+            return res.status(404).json({ error: 'No OTP found for this email.' });
+        }
+
+        const outboxRow = outboxRes.rows[0];
+
+        // Mark the OTP as consumed
+        await db.query(
+            `UPDATE signup_otp_outbox SET consumed = true WHERE id = $1`,
+            [outboxRow.id]
+        );
+
+        return res.status(200).json({ 
+            otp: outboxRow.otp_plain, 
+            expiresAt: outboxRow.expires_at 
+        });
+
+    } catch (err) {
+        console.error('Error in outbox-fetch:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
 // POST /api/auth/verify-signup-otp
 // Verify the OTP for an email and complete signup (create user). Does NOT auto-login.
 router.post('/verify-signup-otp', async (req, res) => {
