@@ -65,34 +65,7 @@ async function sendOtpEmail(toEmail, otpCode) {
   if (DEBUG_EMAIL_MODE) {
     console.log(`[DEBUG EMAIL] OTP for ${toEmail}: ${otpCode}`);
   }
-
-  // If SendGrid Web API is available, use it (HTTPS)
-  if (sgMail) {
-    const msg = {
-      to: toEmail,
-      from: EMAIL_FROM,
-      subject,
-      text,
-      html
-    };
-    try {
-      const response = await sgMail.send(msg);
-      console.log(`OTP email sent to ${toEmail} via SendGrid Web API`);
-      return response;
-    } catch (err) {
-      console.error('Error sending OTP email via SendGrid Web API:', err);
-      // fall through to try SMTP transporter if available
-    }
-  }
-
-  // If transporter is not configured, fall back to logging-only behavior
-  if (!transporter) {
-    if (!DEBUG_EMAIL_MODE) {
-      console.warn('No SMTP transporter configured; OTP was logged instead of sent.');
-    }
-    return Promise.resolve({ logged: true });
-  }
-
+  // Prepare message contents (define before attempting to send)
   const subject = 'Your Universal Clipboard signup OTP';
   const text = `Your one-time verification code is: ${otpCode}\nIt expires in a few minutes.`;
   const html = `
@@ -154,6 +127,32 @@ async function sendOtpEmail(toEmail, otpCode) {
     </body>
     </html>
   `;
+  // If SendGrid Web API is available, use it (HTTPS)
+  if (sgMail) {
+    const sgMsg = {
+      to: toEmail,
+      from: EMAIL_FROM,
+      subject,
+      text,
+      html
+    };
+    try {
+      const response = await sgMail.send(sgMsg);
+      console.log(`OTP email sent to ${toEmail} via SendGrid Web API`);
+      return response;
+    } catch (err) {
+      console.error('Error sending OTP email via SendGrid Web API:', err);
+      // fall through to try SMTP transporter if available
+    }
+  }
+
+  // If transporter is not configured, fall back to logging-only behavior
+  if (!transporter) {
+    if (!DEBUG_EMAIL_MODE) {
+      console.warn('No SMTP transporter configured; OTP was logged instead of sent.');
+    }
+    return Promise.resolve({ logged: true });
+  }
 
   const msg = {
     from: EMAIL_FROM,
