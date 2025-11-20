@@ -47,7 +47,11 @@ const AuthScreen = () => {
       } else {
         // Signup flow: two-step with OTP
         if (signupStep === 'enterDetails') {
-          // Request OTP from the server
+          // Immediately show the OTP input container so the user can paste/enter the code
+          setSignupStep('enterOtp');
+          setNotice({ type: 'info', text: 'Requesting OTP — please wait. It may take a minute to arrive.' });
+
+          // Request OTP from the server (perform after UI update so OTP input appears instantly)
           try {
             // Ensure API base includes the /api/auth path so requests go to the correct backend route
             const rawApi = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
@@ -59,7 +63,7 @@ const AuthScreen = () => {
             console.log('Requesting signup OTP to:', `${API_URL}/request-signup-otp`, { email });
 
             await axios.post(`${API_URL}/request-signup-otp`, { email, password });
-            setSignupStep('enterOtp');
+
             setNotice({ type: 'info', text: 'OTP sent to your email. Enter it below to verify.' });
             // start 60s cooldown for resend
             setResendCooldown(60);
@@ -76,6 +80,8 @@ const AuthScreen = () => {
           } catch (err) {
             const msg = err.response?.data?.error || 'Failed to request OTP.';
             setNotice({ type: 'error', text: msg });
+            // revert to details step so user can retry
+            setSignupStep('enterDetails');
             setSubmitState('idle');
           }
         } else if (signupStep === 'enterOtp') {
@@ -213,6 +219,12 @@ const AuthScreen = () => {
               </button>
             </div>
           )}
+          {/* Informational note when OTP step is visible */}
+          {!isLogin && signupStep === 'enterOtp' && (
+            <p style={{ fontSize: '13px', color: '#666666', marginTop: '6px' }}>
+              Please wait for the OTP — it may take up to a minute to arrive. If you don't see it, check your spam folder.
+            </p>
+          )}
 
           <button
             type="submit"
@@ -222,7 +234,7 @@ const AuthScreen = () => {
             aria-live="polite"
           >
             <span className="btn-inner">
-              <span className="btn-label">{isLogin ? 'Login' : 'Signup'}</span>
+              <span className="btn-label">{isLogin ? 'Login' : (signupStep === 'enterDetails' ? 'Send OTP' : 'Signup')}</span>
               {/* spinner removed per user request; keep success check */}
               <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
                 <path d="M20.285 6.708l-11.39 11.39-5.18-5.18 1.414-1.414 3.766 3.766 9.976-9.977z" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
