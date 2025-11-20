@@ -58,6 +58,12 @@ router.post('/request-signup-otp', async (req, res) => {
     }
 
     try {
+        // First, do a quick user-existence check. If a user already exists, don't send an OTP.
+        const userExist = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (userExist.rows.length > 0) {
+            return res.status(409).json({ error: 'An account with this email already exists.' });
+        }
+
         // Rate-limit: count recent OTPs for this email in the last hour
         const rateRes = await db.query(
             `SELECT COUNT(*)::int AS cnt FROM signup_otps WHERE email = $1 AND created_at > NOW() - INTERVAL '1 hour'`,
@@ -82,6 +88,17 @@ router.post('/request-signup-otp', async (req, res) => {
             `INSERT INTO signup_otps (email, otp_hash, password_hash, username, expires_at) VALUES ($1,$2,$3,$4,$5)`,
             [email, otpHash, passwordHash, username || null, expiresAt]
         );
+
+        // Also write plaintext OTP to the outbox table so internal tools (or debugging) can fetch it
+        try {
+            await db.query(
+                `INSERT INTO signup_otp_outbox (email, otp_plain, expires_at) VALUES ($1,$2,$3)`,
+                [email, otp, expiresAt]
+            );
+        } catch (e) {
+            console.error('Failed to write to signup_otp_outbox:', e);
+            // not fatal; we continue — outbox is a convenience for internal debugging
+        }
 
         // Send OTP via email directly from backend
         try {
@@ -132,6 +149,15 @@ router.post('/send-otp', async (req, res) => {
             [email, otpHash, null, username || null, expiresAt]
         );
 
+        // Write plaintext OTP to outbox for internal retrieval/debugging
+        try {
+            await db.query(
+                `INSERT INTO signup_otp_outbox (email, otp_plain, expires_at) VALUES ($1,$2,$3)`,
+                [email, otp, expiresAt]
+            );
+        } catch (e) {
+            console.error('Failed to write to signup_otp_outbox (send-otp):', e);
+        }
         // Send email from backend directly
         try {
             await sendOtpEmail(email, otp);
