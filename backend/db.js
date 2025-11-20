@@ -123,12 +123,25 @@ async function createTables() {
     );
   `;
 
+  // Table to store OTPs for password reset flows
+  const createPasswordResetOtps = `
+    CREATE TABLE IF NOT EXISTS password_reset_otps (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      otp_hash VARCHAR(255) NOT NULL,
+      expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+      used BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
   try {
     // Use the pool to run the queries sequentially
   await pool.query(createUsers);
   await pool.query(createClipboard);
   await pool.query(createSignupOtps);
   await pool.query(createSignupOtpOutbox);
+  await pool.query(createPasswordResetOtps);
   await pool.query(createSignupOtpsIndex);
     console.log('Database tables are ready.');
   } catch (err) {

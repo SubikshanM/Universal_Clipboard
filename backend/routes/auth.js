@@ -13,6 +13,21 @@ const tokenExpiration = '2h'; // JWT expires in 2 hours
 const OTP_EXPIRATION_MINUTES = parseInt(process.env.OTP_EXPIRATION_MINUTES || '10', 10);
 const OTP_RATE_LIMIT_PER_HOUR = parseInt(process.env.OTP_RATE_LIMIT_PER_HOUR || '5', 10);
 
+// Helper: common rate-limit check for OTPs (uses password_reset_otps and signup_otps)
+async function recentOtpCount(email) {
+    try {
+        const r = await db.query(
+            `SELECT (COALESCE((SELECT COUNT(*)::int FROM signup_otps WHERE email = $1 AND created_at > NOW() - INTERVAL '1 hour'),0) + 
+                     COALESCE((SELECT COUNT(*)::int FROM password_reset_otps WHERE email = $1 AND created_at > NOW() - INTERVAL '1 hour'),0))::int AS cnt`,
+            [email]
+        );
+        return parseInt(r.rows[0].cnt, 10) || 0;
+    } catch (e) {
+        console.error('Error checking recent OTP count:', e);
+        return 0;
+    }
+}
+
 // --- POST /api/auth/signup ---
 // Handles new user registration, securely hashing the password.
 router.post('/signup', async (req, res) => {
@@ -169,6 +184,96 @@ router.post('/send-otp', async (req, res) => {
         return res.status(200).json({ message: 'If the email is valid an OTP has been sent.' });
     } catch (err) {
         console.error('Error in send-otp:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/request-password-reset
+// Starts the password reset flow by sending an OTP to the user's email.
+router.post('/request-password-reset', async (req, res) => {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+    try {
+        // Ensure the email belongs to an existing user. Return generic response if not.
+        const userRes = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (userRes.rows.length === 0) {
+            // Generic response to avoid user enumeration
+            return res.status(200).json({ message: 'If the email exists, an OTP has been sent.' });
+        }
+
+        // Rate-limit using both OTP tables
+        const recentCount = await recentOtpCount(email);
+        if (recentCount >= OTP_RATE_LIMIT_PER_HOUR) {
+            return res.status(429).json({ error: 'Too many OTP requests for this email. Please try again later.' });
+        }
+
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        const otpHash = await bcrypt.hash(otp, saltRounds);
+        const expiresAt = new Date(Date.now() + OTP_EXPIRATION_MINUTES * 60 * 1000);
+
+        await db.query(
+            `INSERT INTO password_reset_otps (email, otp_hash, expires_at) VALUES ($1,$2,$3)`,
+            [email, otpHash, expiresAt]
+        );
+
+        // also write to outbox for internal testing/debugging
+        try {
+            await db.query(
+                `INSERT INTO signup_otp_outbox (email, otp_plain, expires_at) VALUES ($1,$2,$3)`,
+                [email, otp, expiresAt]
+            );
+        } catch (e) {
+            console.error('Failed to write password reset OTP to outbox:', e);
+        }
+
+        try {
+            await sendOtpEmail(email, otp);
+        } catch (err) {
+            console.error('Failed to send password reset OTP email:', err);
+        }
+
+        return res.status(200).json({ message: 'If the email exists, an OTP has been sent.' });
+    } catch (err) {
+        console.error('Error in request-password-reset:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/reset-password
+// Finalize password reset by verifying OTP and updating the user's password.
+router.post('/reset-password', async (req, res) => {
+    const { email, otp, newPassword } = req.body || {};
+    if (!email || !otp || !newPassword) return res.status(400).json({ error: 'Email, OTP and new password are required.' });
+
+    try {
+        // Find the most recent non-used, unexpired password reset OTP
+        const otpRes = await db.query(
+            `SELECT * FROM password_reset_otps WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1`,
+            [email]
+        );
+
+        if (otpRes.rows.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired OTP.' });
+        }
+
+        const otpRow = otpRes.rows[0];
+        const match = await bcrypt.compare(otp, otpRow.otp_hash);
+        if (!match) return res.status(400).json({ error: 'Invalid OTP.' });
+
+        // Hash new password and update user record
+        const newHash = await bcrypt.hash(newPassword, saltRounds);
+        const updateRes = await db.query('UPDATE users SET password_hash = $1 WHERE email = $2 RETURNING id', [newHash, email]);
+        if (updateRes.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        // Mark OTP used
+        await db.query('UPDATE password_reset_otps SET used = true WHERE id = $1', [otpRow.id]);
+
+        return res.status(200).json({ message: 'Password reset successful. Please login with your new password.' });
+    } catch (err) {
+        console.error('Error in reset-password:', err);
         return res.status(500).json({ error: 'Internal server error.' });
     }
 });

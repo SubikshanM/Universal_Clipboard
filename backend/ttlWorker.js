@@ -48,6 +48,21 @@ const runOutboxCleanup = async () => {
     } catch (err) {
         // Log stack trace only if connection is confirmed established, otherwise just log message
         console.error('[TTL Worker] Error during outbox cleanup:', err.message);
+
+    } catch (err) {
+
+// Cleanup for password_reset_otps table
+const runPasswordResetCleanup = async () => {
+    try {
+        const expired = await db.query(`DELETE FROM password_reset_otps WHERE expires_at < NOW()`);
+        const consumedOld = await db.query(`DELETE FROM password_reset_otps WHERE used = true AND created_at < NOW() - INTERVAL '1 day'`);
+        console.log(`[TTL Worker] Password reset cleanup complete. Deleted ${expired.rowCount} expired, ${consumedOld.rowCount} old used OTP(s).`);
+    } catch (err) {
+        console.error('[TTL Worker] Error during password reset cleanup:', err.message);
+    }
+};
+        // Log stack trace only if connection is confirmed established, otherwise just log message
+        console.error('[TTL Worker] Error during outbox cleanup:', err.message);
     }
 };
 
@@ -58,6 +73,7 @@ const workerLoop = () => {
     // Run the cleanup immediately when the worker starts
     runCleanup();
     runOutboxCleanup();
+    runPasswordResetCleanup();
     
     // Set up the cleanup function to run every 'intervalSeconds'
     const intervalMs = CLEANUP_INTERVAL_SECONDS * 1000;
@@ -65,6 +81,7 @@ const workerLoop = () => {
     setInterval(() => {
         runCleanup();
         runOutboxCleanup();
+        runPasswordResetCleanup();
     }, intervalMs);
 };
 
