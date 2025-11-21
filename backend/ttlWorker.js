@@ -93,7 +93,16 @@ async function runAllCleanups() {
 // Utility: check whether a table exists in the public schema
 async function tableExists(tableName) {
   try {
-    const q = `SELECT to_regclass('public.' || $1) IS NOT NULL AS exists`;
+    // Check information_schema so we detect the table regardless of schema (public or other).
+    // Some hosting providers or connection roles may use different search_path or schema names,
+    // so checking information_schema.tables is more robust than relying on 'public.' prefix.
+    const q = `
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = $1
+          AND table_schema NOT IN ('pg_catalog', 'information_schema')
+      ) AS exists
+    `;
     const r = await db.query(q, [tableName]);
     return r.rows && r.rows[0] && r.rows[0].exists === true;
   } catch (err) {
