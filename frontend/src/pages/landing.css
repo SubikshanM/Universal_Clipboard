@@ -86,3 +86,32 @@
   .auth-panel { order: 2; width: 100%; max-width: 480px; transform: translateY(-20px); }
   .hero-title { font-size: 28px; }
 }
+
+/* Developer attribution pill (bottom-left) */
+.dev-info {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  background: rgba(255,255,255,0.9);
+  color: #0b1220;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(12,20,40,0.08);
+  z-index: 1200;
+}
+.dev-info a { color: #06b6d4; text-decoration: none; font-weight: 600; }
+.dev-link { display: inline-flex; align-items: center; gap: 8px; color: #06b6d4; }
+.dev-icon { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
+.dev-link-text { display: inline-block; }
+.dev-info .dev-sep { opacity: 0.6; margin: 0 6px; }
+
+@media (max-width: 700px) {
+  .dev-info { right: 12px; left: auto; bottom: 12px; font-size: 12px; padding: 6px 10px; }
+}
+
+body.dark-mode .dev-info { background: rgba(6,20,30,0.85); color: #cfe8ff; }
+body.dark-mode .dev-info a { color: #aee9ff; }
