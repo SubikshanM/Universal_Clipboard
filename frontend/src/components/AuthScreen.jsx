@@ -382,7 +382,7 @@ export default function AuthScreen({ initialMode = 'login' }) {
           {isLogin && !isResetFlow ? (
             <>
               <div style={{ marginTop: 8 }}>
-                <span>Don't remember your password? </span>
+                <span>Don't you remember your password? </span>
                 <button onClick={() => {
                     setIsResetFlow(true);
                     setResetStep('enterEmail');

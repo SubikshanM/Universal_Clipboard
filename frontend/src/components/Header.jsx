@@ -24,10 +24,10 @@ export default function Header({ onChangeMode }) {
 
 const styles = {
   header: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 28px', maxWidth: '1200px', margin: '0 auto' },
-  left: { display: 'flex', flexDirection: 'column' },
+  left: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
   logoRow: { display: 'flex', alignItems: 'center', gap: 16 },
-  logoImg: { width: 64, height: 64, objectFit: 'contain', borderRadius: 10, boxShadow: '0 8px 26px rgba(12,20,40,0.08)' },
-  logo: { fontSize: 22, fontWeight: 800, marginLeft: 6 },
+  logoImg: { width: 70, height: 70, objectFit: 'contain', borderRadius: 10, boxSha0w: '0 8px 26px rgba(12,20,40,0.08)' },
+  logo: { fontSize: 30, fontWeight: 800, marginLeft: 0, textAlign: 'center' },
   // Pin the logo near the top-left corner (slightly inset) so it sits below browser chrome icons
   // Use fixed positioning so the logo is pinned to the viewport's left-top corner
   // (not constrained by the header's centered container). This puts it at the
@@ -35,7 +35,7 @@ const styles = {
   // Position the fixed logo to align with the header's top padding so it moves up with the header area
   logoAbsolute: { position: 'fixed', left: 8, top: 20, transform: 'none', zIndex: 9999 },
   centerRow: { display: 'flex', alignItems: 'center', gap: 24, width: '100%', justifyContent: 'center', position: 'relative' },
-  tagline: { fontSize: 12, color: 'rgba(0,0,0,0.55)' },
+  tagline: { fontSize: 14, color: 'rgba(0,0,0,0.55)' },
   nav: { display: 'flex', gap: 12, alignItems: 'center', position: 'absolute', right: '-392px', top: '50%', transform: 'translateY(-50%)' },
   link: { background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 10px', fontWeight: 600 },
   cta: { background: 'linear-gradient(90deg,#7c3aed,#06b6d4)', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }
