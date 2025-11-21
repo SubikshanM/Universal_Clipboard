@@ -1,102 +1,91 @@
 const db = require('./db');
 
-// Make cleanup interval configurable via env var, default 60 seconds
+// Configuration
 const CLEANUP_INTERVAL_SECONDS = parseInt(process.env.TTL_CLEANUP_INTERVAL_SECONDS, 10) || 60;
+const START_DELAY_MS = parseInt(process.env.TTL_WORKER_START_DELAY_MS, 10) || 30000;
 
-// The function that performs the cleanup
-const runCleanup = async () => {
-    // Current timestamp to compare against expiration_time
+let intervalHandle = null;
+
+async function runClipboardCleanup() {
+  try {
     const now = new Date().toISOString();
+    const query = `
+      DELETE FROM clipboard_data
+      WHERE expiration_time IS NOT NULL
+        AND expiration_time < $1
+    `;
+    const result = await db.query(query, [now]);
+    console.log(`[TTL Worker] Clipboard cleanup: deleted ${result.rowCount} expired clip(s).`);
+  } catch (err) {
+    console.error('[TTL Worker] Error during clipboard cleanup:', err && err.stack ? err.stack : err);
+  }
+}
 
-    try {
-        // Query to delete all rows where expiration_time is in the past (and not null)
-        const query = `
-            DELETE FROM clipboard_data
-            WHERE expiration_time IS NOT NULL
-              AND expiration_time < $1
-        `;
-        
-        const result = await db.query(query, [now]);
-        
-        console.log(`[TTL Worker] Cleanup complete. Deleted ${result.rowCount} expired clip(s).`);
+async function runOutboxCleanup() {
+  try {
+    const expiredQuery = `DELETE FROM signup_otp_outbox WHERE expires_at < NOW()`;
+    const expiredResult = await db.query(expiredQuery);
 
-    } catch (err) {
-        // Log stack trace only if connection is confirmed established, otherwise just log message
-        console.error('[TTL Worker] Fatal error during clipboard cleanup:', err.message); 
-    }
-};
+    const consumedQuery = `DELETE FROM signup_otp_outbox WHERE consumed = true AND created_at < NOW() - INTERVAL '1 hour'`;
+    const consumedResult = await db.query(consumedQuery);
 
-// Cleanup function for signup_otp_outbox table
-const runOutboxCleanup = async () => {
-    try {
-        // Delete expired entries
-        const expiredQuery = `
-            DELETE FROM signup_otp_outbox
-            WHERE expires_at < NOW()
-        `;
-        const expiredResult = await db.query(expiredQuery);
-        
-        // Delete old consumed entries (older than 1 hour)
-        const consumedQuery = `
-            DELETE FROM signup_otp_outbox
-            WHERE consumed = true AND created_at < NOW() - INTERVAL '1 hour'
-        `;
-        const consumedResult = await db.query(consumedQuery);
-        
-        console.log(`[TTL Worker] Outbox cleanup complete. Deleted ${expiredResult.rowCount} expired, ${consumedResult.rowCount} old consumed OTP(s).`);
+    console.log(`[TTL Worker] Outbox cleanup: deleted ${expiredResult.rowCount} expired, ${consumedResult.rowCount} old consumed OTP(s).`);
+  } catch (err) {
+    console.error('[TTL Worker] Error during outbox cleanup:', err && err.stack ? err.stack : err);
+  }
+}
 
-    } catch (err) {
-        // Log stack trace only if connection is confirmed established, otherwise just log message
-        console.error('[TTL Worker] Error during outbox cleanup:', err.message);
+async function runPasswordResetCleanup() {
+  try {
+    const expired = await db.query(`DELETE FROM password_reset_otps WHERE expires_at < NOW()`);
+    const consumedOld = await db.query(`DELETE FROM password_reset_otps WHERE used = true AND created_at < NOW() - INTERVAL '1 day'`);
+    console.log(`[TTL Worker] Password reset cleanup: deleted ${expired.rowCount} expired, ${consumedOld.rowCount} old used OTP(s).`);
+  } catch (err) {
+    console.error('[TTL Worker] Error during password reset cleanup:', err && err.stack ? err.stack : err);
+  }
+}
 
-    } catch (err) {
+async function runAllCleanups() {
+  // Run each cleanup independently so one failure doesn't stop others
+  await Promise.allSettled([runClipboardCleanup(), runOutboxCleanup(), runPasswordResetCleanup()]);
+}
 
-// Cleanup for password_reset_otps table
-const runPasswordResetCleanup = async () => {
-    try {
-        const expired = await db.query(`DELETE FROM password_reset_otps WHERE expires_at < NOW()`);
-        const consumedOld = await db.query(`DELETE FROM password_reset_otps WHERE used = true AND created_at < NOW() - INTERVAL '1 day'`);
-        console.log(`[TTL Worker] Password reset cleanup complete. Deleted ${expired.rowCount} expired, ${consumedOld.rowCount} old used OTP(s).`);
-    } catch (err) {
-        console.error('[TTL Worker] Error during password reset cleanup:', err.message);
-    }
-};
-        // Log stack trace only if connection is confirmed established, otherwise just log message
-        console.error('[TTL Worker] Error during outbox cleanup:', err.message);
-    }
-};
+function workerLoop() {
+  // Run immediately then schedule
+  runAllCleanups().catch(err => console.error('[TTL Worker] Unexpected error running cleanups:', err));
 
-// --- NEW CODE: Initialization and Delay Wrapper ---
+  const intervalMs = CLEANUP_INTERVAL_SECONDS * 1000;
+  intervalHandle = setInterval(() => {
+    runAllCleanups().catch(err => console.error('[TTL Worker] Unexpected error running cleanups:', err));
+  }, intervalMs);
 
-// The worker loop function, separated from initialization
-const workerLoop = () => {
-    // Run the cleanup immediately when the worker starts
-    runCleanup();
-    runOutboxCleanup();
-    runPasswordResetCleanup();
-    
-    // Set up the cleanup function to run every 'intervalSeconds'
-    const intervalMs = CLEANUP_INTERVAL_SECONDS * 1000;
-    
-    setInterval(() => {
-        runCleanup();
-        runOutboxCleanup();
-        runPasswordResetCleanup();
-    }, intervalMs);
-};
+  console.log(`[TTL Worker] Worker loop started. Cleanup interval: ${CLEANUP_INTERVAL_SECONDS}s`);
+}
 
-
-const initializeWorker = async () => {
-    console.log('[TTL Worker] Initializing with a 30-second delay to allow main web service to create relations...');
-    
-    // Wait for 30 seconds (30000 milliseconds)
-    await new Promise(resolve => setTimeout(resolve, 30000)); 
-    
-    console.log(`[TTL Worker] Delay complete. Starting worker loop. Running cleanup every ${CLEANUP_INTERVAL_SECONDS} seconds...`);
-
-    // Start the actual cleanup loop now that the delay is over
+async function initializeWorker() {
+  try {
+    const delayMs = START_DELAY_MS;
+    console.log(`[TTL Worker] Initializing. Waiting ${delayMs}ms before first run to allow main server startup...`);
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
     workerLoop();
-};
+  } catch (err) {
+    console.error('[TTL Worker] Failed to initialize worker:', err && err.stack ? err.stack : err);
+  }
+}
 
-// Start the initialization process instead of running the cleanup immediately
+// Graceful shutdown
+function shutdown() {
+  if (intervalHandle) {
+    clearInterval(intervalHandle);
+    intervalHandle = null;
+    console.log('[TTL Worker] Shutdown: cleared interval.');
+  }
+}
+
+process.on('SIGINT', () => { shutdown(); process.exit(0); });
+process.on('SIGTERM', () => { shutdown(); process.exit(0); });
+
+// Start automatically when this module is required
 initializeWorker();
+
+module.exports = { initializeWorker, shutdown };
