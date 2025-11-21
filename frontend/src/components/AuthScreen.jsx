@@ -5,12 +5,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 // AuthScreen handles Login, Signup (OTP) and Password Reset (OTP) flows
-export default function AuthScreen() {
+export default function AuthScreen({ initialMode = 'login' }) {
   const { login, signup, loading, error } = useAuth();
   const { isDark } = useTheme();
 
-  const [isLogin, setIsLogin] = useState(true);
-  const [isResetFlow, setIsResetFlow] = useState(false);
+  // initialMode can be 'login' | 'signup' | 'forgot'
+  const [isLogin, setIsLogin] = useState(initialMode === 'login');
+  const [isResetFlow, setIsResetFlow] = useState(initialMode === 'forgot');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,9 +36,7 @@ export default function AuthScreen() {
   const [submitState, setSubmitState] = useState('idle');
   const [resendCooldown, setResendCooldown] = useState(0);
   const resendTimerRef = useRef(null);
-  const [animateIn, setAnimateIn] = useState(false);
-
-  useEffect(() => { const id = setTimeout(() => setAnimateIn(true), 16); return () => clearTimeout(id); }, []);
+  // Removed entrance animation to keep auth panel static on landing page
 
   useEffect(() => {
     return () => { if (resendTimerRef.current) clearInterval(resendTimerRef.current); };
@@ -53,6 +52,24 @@ export default function AuthScreen() {
     }
     return undefined;
   }, [isLogin, isResetFlow]);
+
+  // If initialMode changes externally, update internal state
+  useEffect(() => {
+    if (initialMode === 'signup') {
+      setIsLogin(false);
+      setIsResetFlow(false);
+      setSignupStep('enterEmail');
+    } else if (initialMode === 'forgot') {
+      setIsResetFlow(true);
+      setIsLogin(true);
+      setResetStep('enterEmail');
+    } else {
+      setIsLogin(true);
+      setIsResetFlow(false);
+      setSignupStep('enterEmail');
+      setResetStep('enterEmail');
+    }
+  }, [initialMode]);
 
   const apiBase = () => {
     const rawApi = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
@@ -229,7 +246,7 @@ export default function AuthScreen() {
   return (
     <div className="auth-wrapper" style={{ ...styles.wrapper, backgroundColor: isDark ? '#071224' : styles.wrapper.backgroundColor, position: 'relative' }}>
       <div aria-hidden className="auth-bg" />
-      <div className={"auth-card glass" + (animateIn ? ' drop-spin' : '')} style={{ ...styles.card, zIndex: 1 }}>
+  <div className={"auth-card"} style={{ ...styles.card, zIndex: 1 }}>
         <h2 style={{ ...styles.header, color: isDark ? '#e6eef8' : styles.header.color }}>
           {isResetFlow ? 'Reset your password' : (isLogin ? 'Login to Universal Clipboard' : 'Create an Account')}
         </h2>

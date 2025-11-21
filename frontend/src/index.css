@@ -284,20 +284,18 @@ body.dark-mode .btn-toggle,
 }
 
 /* Glassy auth card styles */
-.auth-card.glass {
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 12px 40px rgba(2,6,23,0.12);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #000;
-}
 
-body.dark-mode .auth-card.glass {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  color: #e6eef8;
+/* Make auth card visually static and embedded in the landing page: no glass/background/shadow */
+.auth-panel .auth-card,
+.auth-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  min-height: auto !important;
 }
 
 .auth-top-right { position: absolute; top: 10px; right: 10px; z-index: 1100; }
@@ -342,6 +340,16 @@ body.dark-mode .auth-card.glass {
 /* Respect reduced motion for button animations */
 @media (prefers-reduced-motion: reduce) {
   .submit-btn .btn-check { transition: none !important; animation: none !important; }
+}
+
+/* Landing page overrides / glass gradient accent */
+.site-header { position: relative; z-index: 50; }
+.landing-root { min-height: 100vh; background: linear-gradient(135deg, #eef2ff 0%, #e6fffa 60%); }
+.hero-title { font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif; font-weight: 700; }
+.auth-panel .auth-card.glass { width: 100%; max-width: 420px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero { transition: none !important; }
 }
 
 

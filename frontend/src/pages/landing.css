@@ -1,0 +1,88 @@
+/* Landing page styles (separate file) */
+.landing-root { min-height: 100vh; display: flex; flex-direction: column; background: linear-gradient(180deg,#f7fbff 0%, #eef6ff 60%); }
+.landing-container { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px; }
+.hero { flex: 1 1 60%; padding: 24px; }
+.hero { transform: translateY(-80px); }
+.hero-title { font-size: 48px; margin: 0 0 12px 0; color: #0f172a; }
+.hero-sub { margin: 0 0 18px 0; color: #475569; font-size: 18px; }
+.hero-features { margin: 0; padding-left: 20px; color: #334155; }
+.hero-features li { margin-bottom: 8px; }
+.auth-panel { width: 420px; display: flex; align-items: center; justify-content: center; /* keep layout */ }
+
+/* Nudge the auth panel upward so it sits a bit higher on the landing page */
+.auth-panel { transform: translateY(-80px); }
+
+/* Ensure auth panel has no white background and appears embedded in the landing */
+.auth-panel { background: transparent !important; }
+.auth-panel .auth-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+
+/* Defensive: remove any pseudo-elements or decorative backgrounds that may create a white box */
+.auth-panel::before, .auth-panel::after,
+.auth-panel .auth-card::before, .auth-panel .auth-card::after {
+  display: none !important;
+  content: none !important;
+  background: transparent !important;
+}
+
+/* Ensure inputs keep their normal white backgrounds so they're readable */
+.auth-panel input, .auth-panel textarea { background: rgba(255,255,255,0.9) !important; }
+/* Ensure input containers are solid white so email/password fields read clearly */
+.auth-panel input, .auth-panel textarea,
+.auth-wrapper input, .auth-wrapper textarea,
+.auth-panel .auth-card input, .auth-panel .auth-card textarea {
+  background: white !important;
+  border: 1px solid #e6e6e6 !important;
+  color: #0b1220 !important;
+  /* add a subtle black outline around input containers */
+  outline: 2px solid #000 !important;
+  outline-offset: 0px !important;
+}
+
+/* Stronger outline on focus for accessibility */
+.auth-panel input:focus, .auth-panel textarea:focus,
+.auth-wrapper input:focus, .auth-wrapper textarea:focus,
+.auth-panel .auth-card input:focus, .auth-panel .auth-card textarea:focus {
+  outline: 2px solid #000 !important;
+  box-shadow: 0 4px 10px rgba(2,6,23,0.06) !important;
+}
+
+/* Aggressive reset: remove any remaining background, background-image, borders, radii or shadows
+   from the auth panel and its descendants so nothing renders a white box on the landing page. */
+.auth-panel, .auth-panel *, .auth-panel *::before, .auth-panel *::after,
+.auth-panel .auth-card, .auth-wrapper, .auth-wrapper .auth-card {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Keep inputs readable but remove large white wrappers */
+.auth-panel .auth-card form { background: transparent !important; padding: 0 !important; }
+
+/* Ensure the primary submit button inside the auth panel keeps its intended gradient
+   even though we apply aggressive transparent resets elsewhere. This forces the
+   visual CTA to remain visible and contrasting. */
+.auth-panel .submit-btn {
+  background: linear-gradient(90deg,#ff7a18,#ff3d7f) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 20px rgba(255,77,110,0.14) !important;
+  opacity: 1 !important;
+}
+.auth-panel .submit-btn[disabled] {
+  /* keep a visible CTA when disabled, but indicate non-interactive state */
+  filter: saturate(0.95) brightness(0.95) !important;
+  cursor: not-allowed !important;
+  opacity: 0.95 !important;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 900px) {
+  .landing-container { flex-direction: column; padding: 18px; }
+  .hero { order: 1; width: 100%; }
+  .hero { transform: translateY(-20px); }
+  .auth-panel { order: 2; width: 100%; max-width: 480px; transform: translateY(-20px); }
+  .hero-title { font-size: 28px; }
+}

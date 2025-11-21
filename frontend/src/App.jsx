@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './context/AuthContext';
 import AuthScreen from './components/AuthScreen';
+import Landing from './pages/Landing';
 import ProfileDropdown from './components/ProfileDropdown';
 import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
@@ -382,15 +383,8 @@ function App() {
 
   return (
     <div className="App">
-      {/* When not logged in, show a fixed toggle on the auth screen (so auth still has a top-right toggle).
-          When logged in the toggle renders inside the header-controls so it's aligned with the profile avatar. */}
-      {!token && (
-        <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 9999 }} className="global-theme-toggle">
-          <ThemeToggle />
-        </div>
-      )}
-  {/* ClickDesign removed (disabled) per user request */}
-      {token ? <Dashboard showToast={(m,t)=>setToast({message:m,type:t})} /> : <AuthScreen />}
+      {/* ClickDesign removed (disabled) per user request */}
+      {token ? <Dashboard showToast={(m,t)=>setToast({message:m,type:t})} /> : <Landing />}
       <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
     </div>
   );
