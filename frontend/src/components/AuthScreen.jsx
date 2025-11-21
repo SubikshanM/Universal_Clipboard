@@ -381,17 +381,6 @@ export default function AuthScreen({ initialMode = 'login' }) {
         <div style={styles.switchText}>
           {isLogin && !isResetFlow ? (
             <>
-              <div>
-                <span>Don't have an account? </span>
-        <button onClick={() => {
-          setIsLogin(prev => !prev);
-          setIsResetFlow(false);
-          setSignupStep('enterEmail');
-                    // clear sensitive fields when switching modes to avoid autofill/populated values
-                    setPassword(''); setOtp(''); setNewPassword(''); setConfirmNewPassword(''); setSignupConfirmPassword(''); setNotice(null);
-                    setShowSignupPassword(false); setShowSignupConfirmPassword(false);
-                  }} style={{ ...styles.switchButton, color: isDark ? '#9fd3ff' : '#007bff' }}>{'Signup'}</button>
-              </div>
               <div style={{ marginTop: 8 }}>
                 <span>Don't remember your password? </span>
                 <button onClick={() => {

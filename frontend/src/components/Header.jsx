@@ -5,7 +5,7 @@ export default function Header({ onChangeMode }) {
     <header className="site-header" style={styles.header}>
       {/* Absolute logo pinned to the left edge */}
       <div style={styles.logoAbsolute}>
-        <img src="/logo_wb.png" alt="Universal Clipboard logo" style={styles.logoImg} />
+        <img className="site-logo" src="/logo_wb.png" alt="Universal Clipboard logo" style={styles.logoImg} />
       </div>
 
       <div style={styles.centerRow}>
@@ -14,8 +14,8 @@ export default function Header({ onChangeMode }) {
           <div style={styles.tagline}>Paste anywhere, instantly</div>
         </div>
         <nav style={styles.nav}>
-          <button onClick={() => onChangeMode && onChangeMode('login')} style={styles.link}>Login</button>
-          <button onClick={() => onChangeMode && onChangeMode('signup')} style={{...styles.cta}}>Signup</button>
+          <button className="header-cta" onClick={() => onChangeMode && onChangeMode('login')} style={{ ...styles.cta, marginRight: 8 }}>Login</button>
+          <button className="header-cta" onClick={() => onChangeMode && onChangeMode('signup')} style={{ ...styles.cta }}>Signup</button>
         </nav>
       </div>
     </header>
@@ -34,9 +34,9 @@ const styles = {
   // leftmost side of the page even when the header content is centered.
   // Position the fixed logo to align with the header's top padding so it moves up with the header area
   logoAbsolute: { position: 'fixed', left: 8, top: 20, transform: 'none', zIndex: 9999 },
-  centerRow: { display: 'flex', alignItems: 'center', gap: 24 },
+  centerRow: { display: 'flex', alignItems: 'center', gap: 24, width: '100%', justifyContent: 'center', position: 'relative' },
   tagline: { fontSize: 12, color: 'rgba(0,0,0,0.55)' },
-  nav: { display: 'flex', gap: 12, alignItems: 'center' },
+  nav: { display: 'flex', gap: 12, alignItems: 'center', position: 'absolute', right: '-392px', top: '50%', transform: 'translateY(-50%)' },
   link: { background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 10px', fontWeight: 600 },
   cta: { background: 'linear-gradient(90deg,#7c3aed,#06b6d4)', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }
 };
