@@ -355,26 +355,34 @@ body.dark-mode .btn-toggle,
 .header-cta:active { transform: translateY(-1px) scale(0.997); }
 .header-cta:focus { box-shadow: 0 0 0 6px rgba(124,58,237,0.12); outline: none; }
 
-/* Logo hover: subtle lift and scale on hover for visual polish */
+.site-logo-wrap {
+  display: inline-block;
+  width: 76px;
+  height: 76px;
+  padding: 6px;
+  border-radius: 14px;
+  background: conic-gradient(#7c3aed, #06b6d4, #ff7a18, #ff3d7f, #7c3aed);
+  animation: rotateGradient 8s linear infinite;
+  transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms ease;
+}
+.site-logo-wrap:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 30px rgba(12,20,40,0.12); }
 .site-logo {
   width: 64px;
   height: 64px;
-  display: inline-block;
+  display: block;
   border-radius: 10px;
-  transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms ease;
-  will-change: transform;
+  background: #fff;
+  object-fit: contain;
+  animation: hueRotate 6s linear infinite;
 }
-.site-logo:hover {
-  transform: translateY(-3px) scale(1.06);
-  box-shadow: 0 12px 30px rgba(12,20,40,0.12);
-}
-.site-logo:active { transform: scale(1.02); }
-
+.site-logo:hover { transform: scale(1.04); }
+@keyframes rotateGradient { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes hueRotate { from { filter: hue-rotate(0deg) saturate(1.05); } to { filter: hue-rotate(360deg) saturate(1.05); } }
 @media (prefers-reduced-motion: reduce) {
-  .site-logo, .site-logo:hover { transition: none !important; transform: none !important; box-shadow: none !important; }
+  .site-logo-wrap, .site-logo { animation: none !important; transform: none !important; box-shadow: none !important; }
 }
 
-.landing-root { min-height: 100vh; background: linear-gradient(135deg, #eef2ff 0%, #e6fffa 60%); }
+.landing-root { min-height: 100vh; background: linear-gradient(135deg, #e8fbfd 0%, #f6f2fb 60%); }
 .hero-title { font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif; font-weight: 700; }
 .auth-panel .auth-card.glass { width: 100%; max-width: 420px; }
 
