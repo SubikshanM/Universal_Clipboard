@@ -1,0 +1,101 @@
+/* Minimal, rebuilt sliding toggle — simple and precise */
+.daynight-toggle{background:transparent;border:0;padding:0;display:inline-block;cursor:pointer}
+.daynight-toggle:focus{outline:none}
+
+/* size variables */
+.daynight-sm{--dnt-width:44px;--dnt-height:20px;--dnt-knob:16px;--dnt-pad:2px;--dnt-ring-gap:3px}
+.daynight-md{--dnt-width:52px;--dnt-height:24px;--dnt-knob:18px;--dnt-pad:2px;--dnt-ring-gap:3px}
+.daynight-lg{--dnt-width:68px;--dnt-height:32px;--dnt-knob:24px;--dnt-pad:4px;--dnt-ring-gap:5px}
+
+.dnt-track{display:block;width:var(--dnt-width);height:var(--dnt-height);border-radius:calc(var(--dnt-height)/2);position:relative;padding:var(--dnt-pad);box-sizing:border-box;overflow:visible}
+
+/* outer border color variable (swaps black <-> white between modes) */
+.daynight-toggle{--dnt-outer-border: rgba(0,0,0,0.85);--dnt-ring-gap:4px}
+
+/* visual styles for light/dark track */
+.daynight-toggle.is-light .dnt-track{background:#fff;border:1px solid rgba(16,24,40,0.06);box-shadow:0 1px 0 rgba(16,24,40,0.02)}
+.daynight-toggle.is-dark .dnt-track{background:linear-gradient(180deg,#071226,#06121a);border:1px solid rgba(255,255,255,0.03);box-shadow:inset 0 2px 6px rgba(0,0,0,0.6)}
+
+/* outer border ring (visual emphasis) */
+.dnt-track::after{content:'';position:absolute;left:calc(-1 * var(--dnt-ring-gap));top:calc(-1 * var(--dnt-ring-gap));right:calc(-1 * var(--dnt-ring-gap));bottom:calc(-1 * var(--dnt-ring-gap));border-radius:calc(var(--dnt-height)/2 + var(--dnt-ring-gap));border:2px solid var(--dnt-outer-border);pointer-events:none;box-sizing:border-box;z-index:0;transition:border-color 180ms ease}
+
+/* mode-specific outer border colors */
+.daynight-toggle.is-light{--dnt-outer-border: rgba(0,0,0,0.85)}
+.daynight-toggle.is-dark{--dnt-outer-border: rgba(255,255,255,0.95)}
+
+/* knob */
+/* MODIFIED: Removed flex centering properties */
+.dnt-knob{
+  position:absolute;
+  top:50%;
+  left:var(--dnt-pad);
+  width:var(--dnt-knob);
+  height:var(--dnt-knob);
+  border-radius:50%;
+  transform:translateX(0) translateY(-50%);
+  /* display:flex; align-items:center; justify-content:center; REMOVED */
+  background:#fff;
+  border:1px solid rgba(16,24,40,0.06);
+  box-shadow:0 6px 14px rgba(2,6,23,0.12);
+  transition:transform 200ms cubic-bezier(.2,.8,.2,1),background 160ms ease;
+  z-index:2;
+  /* allow the knob pseudo-ring to show outside the knob bounds */
+  overflow:visible;
+}
+
+/* knob outer ring: sits just outside the knob and follows mode color */
+.dnt-knob::after{
+  content:'';
+  position:absolute;
+  left:calc(-1 * var(--dnt-ring-gap));
+  top:calc(-1 * var(--dnt-ring-gap));
+  right:calc(-1 * var(--dnt-ring-gap));
+  bottom:calc(-1 * var(--dnt-ring-gap));
+  border-radius:50%;
+  border:2px solid var(--dnt-outer-border);
+  pointer-events:none;
+  box-sizing:border-box;
+  z-index:1; /* below icons (z-index:2) but above track */
+  transition:border-color 180ms ease;
+}
+
+/* amount to move when switching to dark */
+.daynight-toggle{--dnt-move:calc(var(--dnt-width) - var(--dnt-knob) - (var(--dnt-pad) * 2) - 1px)}
+.daynight-toggle.is-dark .dnt-knob{transform:translateX(var(--dnt-move)) translateY(-50%)}
+
+/* inner icons */
+/* MODIFIED: Re-added precise absolute centering */
+.dnt-icon{
+  width:64%;
+  height:64%;
+  display:block;
+  pointer-events:none;
+  position:absolute;
+  left:50%;
+  top:50%;
+  /* Removed: display:flex; align-items:center; justify-content:center */
+}
+.dnt-icon svg{width:100%;height:100%;display:block;line-height:0}
+
+/* MODIFIED: Combined translate(-50%,-50%) with scale() to maintain centering during transition */
+.dnt-icon-sun{color:#ffb844;opacity:0;transform:translate(-50%,-50%) scale(.98);transition:opacity 160ms ease,transform 160ms ease;z-index:2}
+.dnt-icon-moon{color:#ffffff;opacity:0;transform:translate(-50%,-50%) scale(.98);transition:opacity 160ms ease,transform 160ms ease;z-index:2}
+
+/* MODIFIED: Combined translate(-50%,-50%) with scale(1) to maintain centering when active */
+.daynight-toggle.is-light .dnt-icon-sun{opacity:1;transform:translate(-50%,-50%) scale(1);visibility:visible}
+.daynight-toggle.is-light .dnt-icon-moon{opacity:0;visibility:hidden}
+.daynight-toggle.is-dark .dnt-icon-moon{opacity:1;transform:translate(-50%,-50%) scale(1);visibility:visible}
+.daynight-toggle.is-dark .dnt-icon-sun{opacity:0;visibility:hidden}
+
+/* knob color in dark mode */
+.daynight-toggle.is-dark .dnt-knob{background:#0f1113;border:1px solid rgba(255,255,255,0.06);box-shadow:0 6px 16px rgba(0,0,0,0.6)}
+
+/* focus ring */
+.daynight-toggle:focus .dnt-track{box-shadow:0 0 0 4px rgba(99,102,241,0.12)}
+
+@media (prefers-reduced-motion:reduce){
+  .dnt-knob,.dnt-track,.dnt-icon{transition:none}
+}
+
+/* header spacing helper */
+.header-controls .daynight-toggle{margin-right:6px}
