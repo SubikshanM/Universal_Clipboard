@@ -63,6 +63,10 @@ body.dark-mode button:not(.btn) {
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
   font-weight: 600;
+  /* Ensure icon + text are horizontally aligned */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px; /* smaller gap between icon and text */
 }
 .btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(100,120,255,0.12); }
 .btn:hover { transform: translateY(-2px); }
@@ -85,6 +89,9 @@ body.dark-mode .btn-accent { background: #dc3545; box-shadow: 0 10px 30px rgba(2
 
 /* Small variant for table actions */
 .btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 6px; }
+
+/* Make SVG icons inside buttons align nicely with text */
+.btn svg { display: inline-block; vertical-align: middle; }
 
 /* Avatar and toggle visibility helpers */
 .avatar-btn {

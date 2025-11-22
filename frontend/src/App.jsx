@@ -258,6 +258,17 @@ const Dashboard = ({ showToast }) => {
           style={{ ...styles.textarea, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
         />
         <div style={styles.ttlRow}>
+          {/* Clock icon before the label */}
+          <svg
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-hidden="true"
+            style={{ ...styles.ttlClock, color: isDark ? '#e6eef8' : '#111' }}
+          >
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M12 7v5l3 2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <label htmlFor="ttl-select" style={styles.ttlLabel}>Expiration:</label>
           <select
             id="ttl-select"
@@ -315,10 +326,16 @@ const Dashboard = ({ showToast }) => {
                         <td data-label="Expires In" style={{ ...styles.td, textAlign: 'center', color: isDark ? '#9fb0c6' : '#111', borderBottomColor: isDark ? '#0f2a3a' : '#f1f1f1' }}>{formatRemaining(item.expires_at_ts ? item.expires_at_ts - now : null)}</td>
                         <td data-label="Actions" style={{ ...styles.td, textAlign: 'center', borderBottomColor: isDark ? '#0f2a3a' : '#f1f1f1' }}>
                           <div className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <button onClick={() => handleCopyFromHistory(item.decrypted_content)} className="btn btn-amber btn-sm">
+                            <button onClick={() => handleCopyFromHistory(item.decrypted_content)} className="btn btn-amber btn-sm" aria-label="Copy clip">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ width: 14, height: 14, verticalAlign: 'middle' }} aria-hidden="true">
+                                <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                              </svg>
                               Copy
                             </button>
-                            <button onClick={() => deleteClip(item.id)} className="btn btn-danger btn-sm">
+                            <button onClick={() => deleteClip(item.id)} className="btn btn-danger btn-sm" aria-label="Delete clip">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ width: 14, height: 14, verticalAlign: 'middle' }} aria-hidden="true">
+                                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                              </svg>
                               Delete
                             </button>
                           </div>
@@ -367,6 +384,7 @@ const styles = {
   ttlRow: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' },
   ttlLabel: { fontSize: '14px', color: '#333' },
   ttlSelect: { padding: '8px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px' },
+  ttlClock: { width: '20px', height: '20px', display: 'inline-block', flexShrink: 0 },
   copyButton: { padding: '5px 10px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginLeft: '10px', flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }
 };
 
