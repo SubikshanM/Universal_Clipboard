@@ -33,6 +33,13 @@ export default function Landing() {
           <span className="dev-link-text">GitHub</span>
         </a>
         <span className="dev-sep">•</span>
+        <a className="dev-link" href="https://www.linkedin.com/in/subikshan-mani-ba0321290/" target="_blank" rel="noopener noreferrer" aria-label="View on LinkedIn">
+          <svg className="dev-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.268c-.966 0-1.75-.79-1.75-1.764 0-.974.784-1.764 1.75-1.764s1.75.79 1.75 1.764c0 .974-.784 1.764-1.75 1.764zm13.5 11.268h-3v-5.604c0-1.337-.026-3.059-1.864-3.059-1.865 0-2.151 1.454-2.151 2.96v5.703h-3v-10h2.881v1.367h.041c.401-.76 1.379-1.562 2.838-1.562 3.037 0 3.6 2.001 3.6 4.6v5.595z"/>
+          </svg>
+          <span className="dev-link-text">LinkedIn</span>
+        </a>
+        <span className="dev-sep">•</span>
         <a className="dev-link" href="mailto:subikshan.mailbox@gmail.com" aria-label="Send email">
           <svg className="dev-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5L4 8V6l8 5 8-5v2z" />
