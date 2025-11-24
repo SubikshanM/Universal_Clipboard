@@ -359,7 +359,22 @@ export default function AuthScreen({ initialMode = 'login' }) {
               {/* When in reset OTP step, show a Verify OTP button so users must explicitly verify before entering new password */}
               {isResetFlow && resetStep === 'enterOtp' && (
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <button type="button" onClick={verifyResetOtp} disabled={submitState === 'loading'} style={{ ...styles.button, padding: '8px 16px', minWidth: 140 }}>Verify OTP</button>
+                  {(() => {
+                    const isDisabled = submitState === 'loading';
+                    // reuse existing btn / btn-primary / submit-btn classes so the button
+                    // matches the Send OTP / main CTA styling (landing.css overrides apply)
+                    return (
+                      <button
+                        type="button"
+                        onClick={verifyResetOtp}
+                        disabled={isDisabled}
+                        className={`btn btn-primary submit-btn ${isDisabled ? 'loading' : ''}`}
+                        style={{ padding: '8px 16px', minWidth: 140 }}
+                      >
+                        Verify OTP
+                      </button>
+                    );
+                  })()}
                 </div>
               )}
             </div>
