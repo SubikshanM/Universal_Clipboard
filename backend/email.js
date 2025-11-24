@@ -1,16 +1,21 @@
 const SibApiV3Sdk = require('@sendinblue/client');
 require('dotenv').config();
 
+// Safely access the SDK classes at the module level.
+// We check if the classes are available directly on the export, or if they are 
+// nested under a common ".default" property (a common Node.js pattern).
+const BrevoClasses = SibApiV3Sdk.ApiClient ? SibApiV3Sdk : (SibApiV3Sdk.default || SibApiV3Sdk);
+
+const ApiClient = BrevoClasses.ApiClient;
+const TransactionalEmailsApi = BrevoClasses.TransactionalEmailsApi;
+const SendSmtpEmail = BrevoClasses.SendSmtpEmail;
+
 // Configuration variables read directly from environment
 const DEBUG_EMAIL_MODE = process.env.DEBUG_EMAIL_MODE === 'true';
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || 'noreply@universalclipboard.com';
 const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || '5';
 
-
-// --- Brevo API Initialization: No global initialization ---
-// Client creation is now inside the function (sendOtpEmail) 
-// to avoid the "is not a constructor" TypeError during module loading.
 
 /**
  * Sends a transactional email containing the OTP code using the Brevo API.
@@ -30,15 +35,18 @@ async function sendOtpEmail(toEmail, otpCode) {
     }
 
     try {
-        // 1. Initialize the client configuration inside the function.
-        // This is the key fix to resolve the deployment issue.
-        const apiConfig = new SibApiV3Sdk.ApiClient();
+        // --- Client Setup using the safely extracted classes ---
+        
+        // This check confirms the classes were successfully extracted at module load time
+        if (!ApiClient || !TransactionalEmailsApi || !SendSmtpEmail) {
+            console.error("FATAL: Brevo SDK classes failed to load dynamically. Cannot proceed.");
+            return false;
+        }
 
-        // 2. Set the API key directly on the client configuration object.
+        // Initialize the client using the globally available, extracted classes
+        const apiConfig = new ApiClient();
         apiConfig.authentications['api-key'].apiKey = BREVO_API_KEY;
-
-        // 3. Initialize the Transactional API instance.
-        const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi(apiConfig);
+        const transactionalApi = new TransactionalEmailsApi(apiConfig);
     
         const subject = 'Your Universal Clipboard verification code';
         const htmlContent = `
@@ -57,8 +65,8 @@ async function sendOtpEmail(toEmail, otpCode) {
             </div>
         `;
 
-        // 4. Create the email payload object.
-        const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+        // Create the email payload object using the globally available, extracted class
+        const sendSmtpEmail = new SendSmtpEmail();
         sendSmtpEmail.to = [{ email: toEmail }];
         sendSmtpEmail.sender = { email: BREVO_SENDER_EMAIL, name: "Universal Clipboard" }; 
         sendSmtpEmail.subject = subject;
@@ -69,8 +77,8 @@ async function sendOtpEmail(toEmail, otpCode) {
         return true;
 
     } catch (err) {
-        // Catch any error during setup or the actual API call
-        console.error('Error during Brevo setup or sending:', err.message);
+        // Log the detailed error from Brevo API response if available
+        console.error('CRITICAL: Error during Brevo API call or setup:', err && err.response ? err.response.body : err.message);
         return false;
     }
 }
