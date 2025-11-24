@@ -23,6 +23,7 @@ export default function AuthScreen({ initialMode = 'login' }) {
   // Signup states
   const [signupStep, setSignupStep] = useState('enterEmail'); // enterEmail | enterOtp | enterPassword
   const [otp, setOtp] = useState('');
+  const [username, setUsername] = useState('');
 
   // Reset states
   const [resetStep, setResetStep] = useState('enterEmail'); // enterEmail | enterOtp
@@ -215,6 +216,12 @@ export default function AuthScreen({ initialMode = 'login' }) {
 
       // signupStep === 'enterPassword' -> finalize signup
       if (signupStep === 'enterPassword') {
+        // Validate username first
+        if (!username || !username.trim()) {
+          setNotice({ type: 'error', text: 'Please choose a username.' });
+          setSubmitState('idle');
+          return;
+        }
         // Validate password and confirmation
         if (!password || password.length < 6) {
           setNotice({ type: 'error', text: 'Password must be at least 6 characters.' });
@@ -228,11 +235,11 @@ export default function AuthScreen({ initialMode = 'login' }) {
         }
 
         // Complete signup by sending password + otp
-    await axios.post(`${API_URL}/complete-signup`, { email, otp, password });
+  await axios.post(`${API_URL}/complete-signup`, { email, otp, password, username });
     // Use the user's requested success message
     setNotice({ type: 'success', text: 'Signup successful — welcome to Universal Clipboard' });
     try { if (window.__showToast) window.__showToast('Signup successful — welcome to Universal Clipboard', 'success'); } catch (e) {}
-    setTimeout(() => { setIsLogin(true); setSignupStep('enterEmail'); setOtp(''); setPassword(''); setSignupConfirmPassword(''); setSubmitState('idle'); }, 1200);
+    setTimeout(() => { setIsLogin(true); setSignupStep('enterEmail'); setOtp(''); setPassword(''); setSignupConfirmPassword(''); setUsername(''); setSubmitState('idle'); }, 1200);
         return;
       }
 
@@ -297,9 +304,20 @@ export default function AuthScreen({ initialMode = 'login' }) {
                 <button type="button" onClick={() => setShowPassword(s => !s)} aria-pressed={showPassword} aria-label={showPassword ? 'Hide password' : 'Show password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showPassword ? 'Hide' : 'Show'}</button>
               </div>
             ) : (
-              // Signup - enter details step shows password + confirm password
+              // Signup - enter details step shows username then password + confirm password
               signupStep === 'enterPassword' && (
                 <>
+                  {/* Username - appears between email and password inputs for signup */}
+                  <input
+                    type="text"
+                    placeholder="Choose a username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    name={'signup-username'}
+                    autoComplete={'username'}
+                    style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
+                  />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input
                       type={showSignupPassword ? 'text' : 'password'}
