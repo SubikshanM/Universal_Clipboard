@@ -7,16 +7,21 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || 'noreply@universalclipboard.com';
 const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || '5';
 
-// --- Brevo API Initialization ---
 
-// 1. Set the API Key Globally on the default client.
-// This is the correct, fixed way to configure the client instance.
+// --- Brevo API Initialization: FIXED APPROACH ---
+
+// 1. Create a new API client configuration instance.
+const apiConfig = new SibApiV3Sdk.ApiClient();
+
+// 2. Set the API key directly on the client configuration object.
 if (BREVO_API_KEY) {
-    SibApiV3Sdk.ApiClient.instance.authentications['api-key'].apiKey = BREVO_API_KEY;
+    // Set the key on the 'api-key' authentication property
+    apiConfig.authentications['api-key'].apiKey = BREVO_API_KEY;
 }
 
-// 2. Initialize the Transactional API instance using the configured client.
-const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi();
+// 3. Initialize the Transactional API instance using the specific configuration object.
+// This prevents the "Cannot read properties of undefined (reading 'instance')" error.
+const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi(apiConfig);
 
 
 /**
@@ -71,6 +76,7 @@ async function sendOtpEmail(toEmail, otpCode) {
         console.log(`OTP email sent successfully to ${toEmail} via Brevo`);
         return true;
     } catch (err) {
+        // Log the detailed error from Brevo API response if available
         console.error('Error sending OTP via Brevo:', err && err.response ? err.response.body : err);
         return false;
     }
