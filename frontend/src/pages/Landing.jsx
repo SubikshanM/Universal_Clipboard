@@ -5,6 +5,7 @@ import './landing.css';
 
 export default function Landing() {
   const [mode, setMode] = useState('login'); // login | signup | forgot
+  const [showAuthMobile, setShowAuthMobile] = useState(false);
 
   return (
     <div className="landing-root">
@@ -18,11 +19,20 @@ export default function Landing() {
             <li>Time-limited clips with automatic expiry</li>
             <li>Email-based secure signup & reset</li>
           </ul>
+          {/* Mobile-only CTAs: moved below the feature list so they appear above the developer info */}
+          <div className="mobile-ctas" aria-hidden={false}>
+            <button className="mobile-cta-btn" onClick={() => { setMode('login'); setShowAuthMobile(true); }}>Login</button>
+            <button className="mobile-cta-btn" onClick={() => { setMode('signup'); setShowAuthMobile(true); }}>Signup</button>
+          </div>
         </div>
-        <div className="auth-panel">
-          <AuthScreen initialMode={mode} />
+        <div className={`auth-panel ${showAuthMobile ? 'mobile-show' : ''}`}>
+          {/* AuthScreen lives in the page itself. On small screens it is hidden by default
+              and shown in-place when `showAuthMobile` is true (no extra modal/overlay). */}
+          <AuthScreen key={mode} initialMode={mode} />
         </div>
       </div>
+      {/* Mobile auth modal - only rendered when triggered */}
+      {/* No separate modal: auth is shown inline inside `.auth-panel` on mobile when requested. */}
       <div className="dev-info">
         <span className="dev-meta">Developed by <strong>Subikshan Mani</strong></span>
         <span className="dev-sep">•</span>

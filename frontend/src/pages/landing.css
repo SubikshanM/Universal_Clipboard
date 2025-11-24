@@ -127,5 +127,68 @@
   .dev-link-text { display: none; }
 }
 
+/* Default: mobile CTAs hidden (desktop uses header nav) */
+.mobile-ctas { display: none; }
+
+/* Mobile-only rules for narrow phones */
+@media (max-width: 480px) {
+  /* Keep header logo in place but hide header nav CTAs (we will render mobile CTAs under the hero) */
+  .site-header nav { display: none !important; }
+
+  /* Ensure background adapts to small screens */
+  .landing-root { background-size: cover; background-position: center top; min-height: 100vh; }
+  /* Reduce top/bottom padding on very small screens so content starts nearer the top */
+  .landing-container { padding-top: 4px; padding-bottom: 4px; }
+
+  /* Stack content from the top on small screens and prevent the hero from taking excessive vertical space */
+  .landing-container { align-items: flex-start; justify-content: flex-start; }
+
+  /* Move title slightly down and center everything - tighten vertical spacing
+    Add significant top padding to push the entire hero content down below the fixed logo.
+  */
+  /* Increase top padding to push everything down from the top */
+  .hero { transform: none; padding: 120px 10px 0 10px; text-align: center; flex: none; margin-bottom: 0; }
+  /* Reset title margin since we're using hero padding instead */
+  .hero-title { font-size: 22px; margin-top: 0; margin-bottom: -4px; }
+  .hero-sub { font-size: 14px; margin-bottom: 12px; }
+
+  /* Show mobile CTAs below the welcome note - minimal spacing */
+  .mobile-ctas { display: flex; gap: 6px; justify-content: center; margin: 0 0 0 0; position: relative; z-index: 10; }
+  .mobile-cta-btn { background: linear-gradient(90deg,#7c3aed,#06b6d4); color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+  /* Hide the desktop inline auth panel on phones by default; can be shown in-place by adding .mobile-show */
+  .auth-panel { display: none !important; }
+  /* Show auth inline and pull it up much closer to the CTAs */
+  .auth-panel.mobile-show { display: flex !important; justify-content: center; width: 100%; padding: 0; margin-top: -180px; }
+  .auth-panel.mobile-show .auth-card { background: #fff !important; border-radius: 12px; padding: 6px !important; box-shadow: 0 6px 12px rgba(2,6,23,0.05) !important; }
+
+  /* Mobile auth modal styles (rendered by React when requested) - kept for compatibility but not used */
+  .mobile-auth-modal { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; }
+  .mobile-auth-backdrop { position: absolute; inset: 0; background: rgba(2,6,23,0.5); }
+  .mobile-auth-content { position: relative; width: 94%; max-width: 420px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 20px 60px rgba(2,6,23,0.3); z-index: 2; }
+  .mobile-auth-close { position: absolute; right: 8px; top: 6px; background: transparent; border: none; font-size: 20px; cursor: pointer; }
+
+  /* Inline mobile auth (appears under CTAs) - legacy selectors kept but not used when using .auth-panel.mobile-show */
+  .mobile-auth-inline { width: 100%; display: flex; justify-content: center; margin-top: 12px; }
+  .mobile-auth-inline-wrap { width: 94%; max-width: 420px; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 12px 36px rgba(2,6,23,0.12); position: relative; }
+  .mobile-auth-inline .mobile-auth-close { position: absolute; right: 10px; top: 8px; background: transparent; border: none; font-size: 20px; cursor: pointer; }
+
+  /* Make hero features more compact on phones */
+  .hero-features { padding-left: 0; display: flex; flex-direction: column; gap: 4px; align-items: center; margin-bottom: 0; }
+  .hero-features li { list-style: none; background: rgba(255,255,255,0.6); padding: 8px 10px; border-radius: 8px; width: 100%; max-width: 360px; box-shadow: 0 6px 18px rgba(12,20,40,0.04); }
+
+  /* Make developer pill less intrusive on small screens */
+  .dev-info { position: static; margin: 12px 10px; padding: 8px 10px; box-shadow: none; background: transparent; color: #6b7280; }
+  .dev-link-text { display: none; }
+
+  /* Reduce the fixed logo size on very small screens so it doesn't overlap the hero title.
+    Header's logo wrapper and image are styled inline in `Header.jsx`, but these class
+    selectors allow us to override sizing responsively. */
+  .site-logo-wrap { width: 56px !important; height: 56px !important; padding: 6px !important; border-radius: 10px !important; }
+  .site-logo { width: 44px !important; height: 44px !important; }
+  /* Slightly nudge the fixed logo down to align with compact header spacing */
+  .site-header { padding-top: 10px !important; }
+}
+
 body.dark-mode .dev-info { background: rgba(6,20,30,0.85); color: #cfe8ff; }
 body.dark-mode .dev-info a { color: #aee9ff; }
