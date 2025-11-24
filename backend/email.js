@@ -1,4 +1,8 @@
-const SibApiV3Sdk = require('@sendinblue/client');
+const {
+    ApiClient,
+    TransactionalEmailsApi,
+    SendSmtpEmail
+} = require('@sendinblue/client');
 require('dotenv').config();
 
 // Configuration variables read directly from environment
@@ -11,17 +15,17 @@ const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || '5';
 // --- Brevo API Initialization: FIXED APPROACH ---
 
 // 1. Create a new API client configuration instance.
-const apiConfig = new SibApiV3Sdk.ApiClient();
+// Using the destructured ApiClient class.
+const apiConfig = new ApiClient();
 
 // 2. Set the API key directly on the client configuration object.
 if (BREVO_API_KEY) {
-    // Set the key on the 'api-key' authentication property
     apiConfig.authentications['api-key'].apiKey = BREVO_API_KEY;
 }
 
 // 3. Initialize the Transactional API instance using the specific configuration object.
-// This prevents the "Cannot read properties of undefined (reading 'instance')" error.
-const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi(apiConfig);
+// Using the destructured TransactionalEmailsApi class.
+const transactionalApi = new TransactionalEmailsApi(apiConfig);
 
 
 /**
@@ -63,13 +67,13 @@ async function sendOtpEmail(toEmail, otpCode) {
         </div>
     `;
 
-    const sendSmtpEmail = {
-        to: [{ email: toEmail }],
-        // Using the configured sender email and a friendly name
-        sender: { email: BREVO_SENDER_EMAIL, name: "Universal Clipboard" }, 
-        subject: subject,
-        htmlContent: htmlContent
-    };
+    // 4. Create the email payload object using the destructured SendSmtpEmail class.
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.to = [{ email: toEmail }];
+    sendSmtpEmail.sender = { email: BREVO_SENDER_EMAIL, name: "Universal Clipboard" }; 
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = htmlContent;
+
 
     try {
         await transactionalApi.sendTransacEmail(sendSmtpEmail);
