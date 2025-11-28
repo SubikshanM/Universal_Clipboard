@@ -3,6 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
 
+// API base used by the frontend. Prefer Vite env `VITE_API_URL`, otherwise fall back
+// to the known backend host used during development/testing.
+const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : 'https://universal-clipboard-q6po.onrender.com/api/auth';
+
 const ProfileDropdown = () => {
   const { user, logout, token } = useAuth();
   const [open, setOpen] = useState(false);
@@ -141,16 +147,20 @@ function ProfileForm({ token, onClose, onUsernameUpdated }) {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   useEffect(() => {
+    // Diagnostic: log the API_URL and token presence so we can debug deployed env issues
+    try { console.info('[ProfileForm] API_URL =', API_URL, ' token-present=', !!token); } catch (e) {}
     let mounted = true;
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get(`${API_URL}/profile`, { headers: { Authorization: `Bearer ${token}` } });
         if (!mounted) return;
         setProfile(res.data.user || {});
         setUsername((res.data.user && res.data.user.username) || '');
       } catch (err) {
-        setNotice({ type: 'error', text: err.response?.data?.error || 'Failed to load profile.' });
+        const status = err.response?.status;
+        console.error('[ProfileForm] fetchProfile error', status, err && err.toString && err.toString());
+        setNotice({ type: 'error', text: `Failed to load profile${status ? ` (status ${status})` : ''}.` });
       } finally { setLoading(false); }
     };
     fetchProfile();
@@ -161,11 +171,13 @@ function ProfileForm({ token, onClose, onUsernameUpdated }) {
     if (!username || username.trim().length === 0) { setNotice({ type: 'error', text: 'Username cannot be empty.' }); return; }
     setLoading(true);
     try {
-      const res = await axios.post('/api/auth/update-username', { username: username.trim() }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.post(`${API_URL}/update-username`, { username: username.trim() }, { headers: { Authorization: `Bearer ${token}` } });
       setNotice({ type: 'success', text: res.data.message || 'Username updated.' });
       onUsernameUpdated && onUsernameUpdated(username.trim());
     } catch (err) {
-      setNotice({ type: 'error', text: err.response?.data?.error || 'Failed to update username.' });
+      const status = err.response?.status;
+      console.error('[ProfileForm] saveUsername error', status, err && err.toString && err.toString());
+      setNotice({ type: 'error', text: `Failed to update username${status ? ` (status ${status})` : ''}.` });
     } finally { setLoading(false); }
   };
 
@@ -173,11 +185,13 @@ function ProfileForm({ token, onClose, onUsernameUpdated }) {
     if (!currentPassword || !newPassword) { setNotice({ type: 'error', text: 'Current and new passwords are required.' }); return; }
     setLoading(true);
     try {
-      const res = await axios.post('/api/auth/change-password', { currentPassword, newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.post(`${API_URL}/change-password`, { currentPassword, newPassword }, { headers: { Authorization: `Bearer ${token}` } });
       setNotice({ type: 'success', text: res.data.message || 'Password changed.' });
       setCurrentPassword(''); setNewPassword('');
     } catch (err) {
-      setNotice({ type: 'error', text: err.response?.data?.error || 'Failed to change password.' });
+      const status = err.response?.status;
+      console.error('[ProfileForm] changePassword error', status, err && err.toString && err.toString());
+      setNotice({ type: 'error', text: `Failed to change password${status ? ` (status ${status})` : ''}.` });
     } finally { setLoading(false); }
   };
 
