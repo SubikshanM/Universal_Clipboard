@@ -49,7 +49,9 @@ const ProfileDropdown = () => {
 
   const { isDark } = useTheme();
   const email = user?.email || 'Unknown';
-  const initial = email.charAt(0).toUpperCase();
+  // Use username first letter if available, otherwise use email first letter
+  const displayName = user?.username || email;
+  const initial = displayName.charAt(0).toUpperCase();
   const avatarBg = isDark ? '#1f2937' : '#333';
   // Always use a white dropdown background as requested, with black text for maximum contrast
   const dropdownBg = 'white';
@@ -72,9 +74,9 @@ const ProfileDropdown = () => {
 
       {open && (
         <div role="dialog" aria-label="Profile menu" style={{ ...styles.dropdown, background: dropdownBg, borderColor: '#e0e0e0' }}>
-          <div style={{ marginBottom: 8 }}>
-            <button onClick={() => { setProfileOpen(true); setOpen(false); }} className="btn btn-primary" style={{ padding: '6px 10px', marginRight: 8 }}>Profile</button>
-            <button onClick={() => { logout(); setOpen(false); }} className="btn btn-danger" style={{ padding: '6px 10px' }}>Logout</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button onClick={() => { setProfileOpen(true); setOpen(false); }} className="btn btn-primary" style={{ padding: '8px 12px', width: '100%' }}>Profile</button>
+            <button onClick={() => { logout(); setOpen(false); }} className="btn btn-danger" style={{ padding: '8px 12px', width: '100%' }}>Logout</button>
           </div>
         </div>
       )}
@@ -219,6 +221,19 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
     try {
       const res = await axios.post(`${API_URL}/update-username`, { username: username.trim() }, { headers: { Authorization: `Bearer ${token}` } });
       setNotice({ type: 'success', text: res.data.message || 'Username updated.' });
+      // Update the profile state to reflect the new username
+      setProfile(prev => ({ ...prev, username: username.trim() }));
+      // Hide the edit form
+      setEditingUsername(false);
+      // Update the AuthContext user data so the avatar initial updates immediately
+      try {
+        const existingUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = { ...existingUser, username: username.trim() };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Force a re-render by updating the user state in AuthContext if possible
+      } catch (e) {
+        console.warn('Could not update localStorage user data:', e);
+      }
       onUsernameUpdated && onUsernameUpdated(username.trim());
       } catch (err) {
       const status = err.response?.status;
@@ -248,31 +263,46 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       <div style={{ marginBottom: 8 }}>
         <strong style={{ color: 'inherit' }}>Email:</strong>
         <div style={{ marginTop: 4, color: 'inherit', wordBreak: 'break-all', fontWeight: 500 }}>{profile.email}</div>
-        {profile.username ? (
-          <div style={{ marginTop: 8, color: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <strong style={{ fontWeight: 600, color: 'inherit' }}>Username:</strong>
-            <span style={{ marginLeft: 6, fontWeight: 600, color: 'inherit' }}>{profile.username}</span>
+        <div style={{ marginTop: 8, color: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <strong style={{ fontWeight: 600, color: 'inherit' }}>Username:</strong>
+          {profile.username ? (
+            <>
+              <span style={{ marginLeft: 6, fontWeight: 600, color: 'inherit' }}>{profile.username}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingUsername(true);
+                  // set username state to current profile username before editing
+                  setUsername(profile.username || '');
+                  // focus after state update
+                  setTimeout(() => usernameInputRef.current && usernameInputRef.current.focus(), 0);
+                }}
+                className="btn"
+                aria-label="Edit username"
+                style={{ marginLeft: 6, padding: '4px 8px', fontSize: 13 }}
+              >
+                {/* Pencil SVG icon */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
+                  <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.41l-2.34-2.34a1.003 1.003 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
+                </svg>
+              </button>
+            </>
+          ) : (
             <button
               type="button"
               onClick={() => {
                 setEditingUsername(true);
-                // set username state to current profile username before editing
-                setUsername(profile.username || '');
-                // focus after state update
+                setUsername('');
                 setTimeout(() => usernameInputRef.current && usernameInputRef.current.focus(), 0);
               }}
-              className="btn"
-              aria-label="Edit username"
-              style={{ marginLeft: 6, padding: '4px 8px', fontSize: 13 }}
+              className="btn btn-secondary"
+              style={{ marginLeft: 6, padding: '6px 12px', fontSize: 13 }}
             >
-              {/* Pencil SVG icon */}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
-                <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.41l-2.34-2.34a1.003 1.003 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
-              </svg>
+              Add username
             </button>
-          </div>
-        ) : null}
+          )}
+        </div>
         
         {/* Change password button - positioned directly below username */}
         <div style={{ marginTop: 8 }}>
