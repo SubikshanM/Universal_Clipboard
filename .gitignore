@@ -1,0 +1,74 @@
+## Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## Environment files (do NOT commit secrets)
+.env
+.env.*
+**/.env
+*.env.local
+.env.local
+.env.backup
+.env.*.bak
+
+## Backend / frontend specific
+backend/.env
+frontend/.env
+
+## Secrets, keys, certs
+*.pem
+*.key
+*.pfx
+*.p12
+*.jks
+*.crt
+*.cer
+id_rsa*
+id_dsa*
+*.asc
+*.gpg
+
+## AWS / cloud credentials
+.aws/
+.gcloud/
+credentials
+secrets.yml
+
+## Build / cache
+dist/
+build/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vite/
+.vercel/
+.firebase/
+
+## Logs
+logs/
+*.log
+npm-debug.log*
+
+## IDEs and OS
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.DS_Store
+Thumbs.db
+
+## Coverage
+coverage/
+
+## Locks (optional - keep if you want reproducible installs)
+# package-lock.json
+# yarn.lock
+
+## Misc
+.envrc
+.env.local.*
+/.env.local
