@@ -10,7 +10,7 @@ const API_URL = (typeof import.meta !== 'undefined' && import.meta.env && import
   : 'https://universal-clipboard-q6po.onrender.com/api/auth';
 
 const ProfileDropdown = () => {
-  const { user, logout, token } = useAuth();
+  const { user, logout, token, updateUser, refreshUserProfile } = useAuth();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const ref = useRef();
@@ -32,6 +32,13 @@ const ProfileDropdown = () => {
     if (profileOpen) document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [profileOpen]);
+
+  // Refresh user profile when component mounts to get latest data including username
+  useEffect(() => {
+    if (token && (!user || !user.username)) {
+      refreshUserProfile();
+    }
+  }, [token, refreshUserProfile]);
 
   // When the dropdown opens, force the heading/email color to black using an inline
   // style with priority 'important' to override any global dark-mode !important rules.
@@ -107,17 +114,7 @@ const ProfileDropdown = () => {
               ×
             </button>
             <h3 style={{ marginTop: 0, textAlign: 'center', marginBottom: 12, fontSize: 20, fontWeight: 700 }}>Your Profile</h3>
-            <ProfileForm token={token} user={user} onClose={() => setProfileOpen(false)} onUsernameUpdated={(newName) => {
-              // update local storage user preview if present
-              try {
-                const raw = localStorage.getItem('user');
-                if (raw) {
-                  const obj = JSON.parse(raw);
-                  obj.username = newName;
-                  localStorage.setItem('user', JSON.stringify(obj));
-                }
-              } catch (e) {}
-            }} />
+            <ProfileForm token={token} user={user} onClose={() => setProfileOpen(false)} updateUser={updateUser} />
           </div>
         </div>
       )}
@@ -180,7 +177,7 @@ const modalStyles = {
 styles.modalBackdrop = modalStyles.backdrop;
 styles.modal = modalStyles.modal;
 
-function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
+function ProfileForm({ token, user, onClose, updateUser }) {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);
   // Initialize displayed profile from client-side AuthContext user so email shows immediately
@@ -208,7 +205,13 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       } catch (err) {
         const status = err.response?.status;
         console.error('[ProfileForm] fetchProfile error', status, err && err.toString && err.toString());
-        setNotice({ type: 'error', text: `Failed to load profile${status ? ` (status ${status})` : ''}.` });
+        if (status === 404) {
+          setNotice({ type: 'error', text: 'Profile endpoint not found - backend needs to be redeployed with new endpoints.' });
+        } else if (status === 500) {
+          setNotice({ type: 'error', text: 'Server error - backend may need to be redeployed.' });
+        } else {
+          setNotice({ type: 'error', text: `Failed to load profile${status ? ` (status ${status})` : ''}.` });
+        }
       } finally { setLoading(false); }
     };
     fetchProfile();
@@ -219,6 +222,7 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
     if (!username || username.trim().length === 0) { setNotice({ type: 'error', text: 'Username cannot be empty.' }); return; }
     setLoading(true);
     try {
+      console.log('[ProfileForm] Attempting to save username:', username.trim(), 'to URL:', `${API_URL}/update-username`);
       const res = await axios.post(`${API_URL}/update-username`, { username: username.trim() }, { headers: { Authorization: `Bearer ${token}` } });
       setNotice({ type: 'success', text: res.data.message || 'Username updated.' });
       // Update the profile state to reflect the new username
@@ -226,20 +230,18 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       // Hide the edit form
       setEditingUsername(false);
       // Update the AuthContext user data so the avatar initial updates immediately
-      try {
-        const existingUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const updatedUser = { ...existingUser, username: username.trim() };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        // Force a re-render by updating the user state in AuthContext if possible
-      } catch (e) {
-        console.warn('Could not update localStorage user data:', e);
-      }
-      onUsernameUpdated && onUsernameUpdated(username.trim());
+      updateUser({ username: username.trim() });
       } catch (err) {
       const status = err.response?.status;
       const serverMsg = err.response?.data?.error || err.response?.data?.message;
       console.error('[ProfileForm] saveUsername error', status, serverMsg || err && err.toString && err.toString());
-      setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to update username${status ? ` (status ${status})` : ''}.` });
+      console.error('[ProfileForm] Full error object:', err);
+      
+      if (status === 500) {
+        setNotice({ type: 'error', text: 'Server error - the backend may not be updated with the new profile endpoints. Please redeploy the backend.' });
+      } else {
+        setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to update username${status ? ` (status ${status})` : ''}.` });
+      }
     } finally { setLoading(false); }
   };
 

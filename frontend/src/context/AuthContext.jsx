@@ -68,6 +68,26 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const updateUser = (updatedUserData) => {
+    const newUser = { ...user, ...updatedUserData };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
+  const refreshUserProfile = async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API_URL}/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const userData = response.data.user;
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Failed to refresh user profile:', error);
+    }
+  };
+
   const contextValue = {
     token,
     user,
@@ -76,6 +96,8 @@ export const AuthProvider = ({ children }) => {
     login: (credentials) => authenticate('login', credentials),
     signup: (credentials) => authenticate('signup', credentials),
     logout,
+    updateUser,
+    refreshUserProfile,
   };
 
   // Provide the context value to child components
