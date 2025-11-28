@@ -239,6 +239,8 @@ function ProfileForm({ token, user, onClose, updateUser }) {
       
       if (status === 500) {
         setNotice({ type: 'error', text: 'Server error - the backend may not be updated with the new profile endpoints. Please redeploy the backend.' });
+      } else if (status === 409 || (serverMsg && serverMsg.toLowerCase().includes('username') && (serverMsg.toLowerCase().includes('exist') || serverMsg.toLowerCase().includes('taken')))) {
+        setNotice({ type: 'error', text: 'This username already exists. Please pick a new one.' });
       } else {
         setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to update username${status ? ` (status ${status})` : ''}.` });
       }

@@ -244,7 +244,15 @@ export default function AuthScreen({ initialMode = 'login' }) {
       }
 
     } catch (err) {
-      setNotice({ type: 'error', text: err.response?.data?.error || 'An error occurred.' });
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.error || 'An error occurred.';
+      
+      // Check for username conflict specifically
+      if (status === 409 || (serverMsg && serverMsg.toLowerCase().includes('username') && (serverMsg.toLowerCase().includes('exist') || serverMsg.toLowerCase().includes('taken')))) {
+        setNotice({ type: 'error', text: 'This username already exists. Please pick a new one.' });
+      } else {
+        setNotice({ type: 'error', text: serverMsg });
+      }
       setSubmitState('idle');
     }
   };
