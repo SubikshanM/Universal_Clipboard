@@ -146,6 +146,8 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
     // Diagnostic: log the API_URL and token presence so we can debug deployed env issues
@@ -175,10 +177,11 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       const res = await axios.post(`${API_URL}/update-username`, { username: username.trim() }, { headers: { Authorization: `Bearer ${token}` } });
       setNotice({ type: 'success', text: res.data.message || 'Username updated.' });
       onUsernameUpdated && onUsernameUpdated(username.trim());
-    } catch (err) {
+      } catch (err) {
       const status = err.response?.status;
-      console.error('[ProfileForm] saveUsername error', status, err && err.toString && err.toString());
-      setNotice({ type: 'error', text: `Failed to update username${status ? ` (status ${status})` : ''}.` });
+      const serverMsg = err.response?.data?.error || err.response?.data?.message;
+      console.error('[ProfileForm] saveUsername error', status, serverMsg || err && err.toString && err.toString());
+      setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to update username${status ? ` (status ${status})` : ''}.` });
     } finally { setLoading(false); }
   };
 
@@ -191,8 +194,9 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       setCurrentPassword(''); setNewPassword('');
     } catch (err) {
       const status = err.response?.status;
-      console.error('[ProfileForm] changePassword error', status, err && err.toString && err.toString());
-      setNotice({ type: 'error', text: `Failed to change password${status ? ` (status ${status})` : ''}.` });
+      const serverMsg = err.response?.data?.error || err.response?.data?.message;
+      console.error('[ProfileForm] changePassword error', status, serverMsg || err && err.toString && err.toString());
+      setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to change password${status ? ` (status ${status})` : ''}.` });
     } finally { setLoading(false); }
   };
 
@@ -217,11 +221,49 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
           <hr />
           <div style={{ marginBottom: 8 }}>
             <label style={{ display: 'block', marginBottom: 4 }}>Current password</label>
-            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                style={{ padding: 8, width: '100%', boxSizing: 'border-box' }}
+                autoComplete="current-password"
+                aria-label="Current password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(s => !s)}
+                className="btn"
+                style={{ padding: '6px 10px', alignSelf: 'center' }}
+                aria-pressed={showCurrentPassword}
+                aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+              >
+                {showCurrentPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
           <div style={{ marginBottom: 8 }}>
             <label style={{ display: 'block', marginBottom: 4 }}>New password</label>
-            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                style={{ padding: 8, width: '100%', boxSizing: 'border-box' }}
+                autoComplete="new-password"
+                aria-label="New password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(s => !s)}
+                className="btn"
+                style={{ padding: '6px 10px', alignSelf: 'center' }}
+                aria-pressed={showNewPassword}
+                aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+              >
+                {showNewPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
         </div>
       )}
