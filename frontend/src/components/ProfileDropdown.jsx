@@ -80,10 +80,17 @@ const ProfileDropdown = () => {
       </button>
 
       {open && (
-        <div role="dialog" aria-label="Profile menu" style={{ ...styles.dropdown, background: dropdownBg, borderColor: '#e0e0e0' }}>
+        <div role="dialog" aria-label="Profile menu" style={{ ...styles.dropdown, background: 'linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe)', backgroundSize: '300% 300%', animation: 'gradientShift 4s ease infinite', borderColor: '#4f46e5', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)' }}>
+          <style>{`
+            @keyframes gradientShift {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}</style>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button onClick={() => { setProfileOpen(true); setOpen(false); }} className="btn btn-primary" style={{ padding: '8px 12px', width: '100%' }}>Profile</button>
-            <button onClick={() => { logout(); setOpen(false); }} className="btn btn-danger" style={{ padding: '8px 12px', width: '100%' }}>Logout</button>
+            <button onClick={() => { setProfileOpen(true); setOpen(false); }} className="btn btn-primary" style={{ padding: '8px 12px', width: '100%', background: 'rgba(255,255,255,0.9)', color: '#4338ca', border: 'none', fontWeight: '600' }}>Profile</button>
+            <button onClick={() => { logout(); setOpen(false); }} className="btn btn-danger" style={{ padding: '8px 12px', width: '100%', background: 'rgba(239,68,68,0.9)', color: 'white', border: 'none', fontWeight: '600' }}>Logout</button>
           </div>
         </div>
       )}
