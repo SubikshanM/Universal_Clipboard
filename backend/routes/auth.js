@@ -4,6 +4,7 @@ const db = require('../db'); // Database connection module
 const bcrypt = require('bcryptjs'); // Secure hashing library (use bcryptjs for easier installs)
 const jwt = require('jsonwebtoken'); // JWT library for token generation
 const { sendOtpEmail } = require('../email');
+const authMiddleware = require('../middleware/auth');
 
 // Configuration
 const saltRounds = 10; // Standard for bcrypt hashing
@@ -565,3 +566,60 @@ if (process.env.DEBUG_TOKEN === 'true') {
 }
 
 module.exports = router;
+
+// --- Authenticated profile endpoints ---
+// GET /api/auth/profile - return basic profile info (email, username)
+router.get('/profile', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user && req.user.id;
+        if (!userId) return res.status(400).json({ error: 'User id missing from token.' });
+
+        const userRes = await db.query('SELECT id, email, username FROM users WHERE id = $1', [userId]);
+        if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+
+        const u = userRes.rows[0];
+        return res.status(200).json({ user: { id: u.id, email: u.email, username: u.username } });
+    } catch (err) {
+        console.error('Error in GET /profile:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/update-username - update the current user's username
+router.post('/update-username', authMiddleware, async (req, res) => {
+    const { username } = req.body || {};
+    if (!username || String(username).trim().length === 0) return res.status(400).json({ error: 'Username is required.' });
+
+    try {
+        const userId = req.user && req.user.id;
+        const normalized = String(username).trim();
+        const update = await db.query('UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username', [normalized, userId]);
+        if (update.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+        return res.status(200).json({ message: 'Username updated.', username: update.rows[0].username });
+    } catch (err) {
+        console.error('Error in POST /update-username:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// POST /api/auth/change-password - change password with current password verification
+router.post('/change-password', authMiddleware, async (req, res) => {
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new passwords are required.' });
+
+    try {
+        const userId = req.user && req.user.id;
+        const userRes = await db.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+        if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+
+        const match = await bcrypt.compare(currentPassword, userRes.rows[0].password_hash);
+        if (!match) return res.status(400).json({ error: 'Current password is incorrect.' });
+
+        const newHash = await bcrypt.hash(newPassword, saltRounds);
+        await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, userId]);
+        return res.status(200).json({ message: 'Password changed.' });
+    } catch (err) {
+        console.error('Error in POST /change-password:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
