@@ -24,6 +24,15 @@ const ProfileDropdown = () => {
     return () => document.removeEventListener('click', handleClick);
   }, []);
 
+  // Close modal on Escape key when profile modal is open
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') setProfileOpen(false);
+    };
+    if (profileOpen) document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [profileOpen]);
+
   // When the dropdown opens, force the heading/email color to black using an inline
   // style with priority 'important' to override any global dark-mode !important rules.
   useEffect(() => {
@@ -45,6 +54,7 @@ const ProfileDropdown = () => {
   // Always use a white dropdown background as requested, with black text for maximum contrast
   const dropdownBg = 'white';
   const textColor = '#000';
+  const avatarBtnRef = useRef();
 
   return (
     <div ref={ref} style={styles.container}>
@@ -52,6 +62,7 @@ const ProfileDropdown = () => {
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
+        ref={avatarBtnRef}
         className="avatar-btn btn"
         style={{ ...styles.avatarButton, background: avatarBg, color: isDark ? '#fff' : 'white' }}
         title={email}
@@ -72,7 +83,28 @@ const ProfileDropdown = () => {
       {profileOpen && (
         <div role="dialog" aria-modal="true" style={styles.modalBackdrop}>
           <div style={styles.modal}>
-            <h3 style={{ marginTop: 0 }}>Your Profile</h3>
+            <button
+              aria-label="Close profile"
+              onClick={() => { setProfileOpen(false); try { avatarBtnRef.current && avatarBtnRef.current.focus(); } catch(e) {} }}
+              title="Close"
+              style={{
+                position: 'absolute',
+                right: 10,
+                top: 8,
+                background: 'rgba(255,255,255,0.10)',
+                border: 'none',
+                color: '#fff',
+                fontSize: 20,
+                cursor: 'pointer',
+                padding: '6px 10px',
+                borderRadius: 8,
+                lineHeight: 1,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+              }}
+            >
+              ×
+            </button>
+            <h3 style={{ marginTop: 0, textAlign: 'center', marginBottom: 12, fontSize: 20, fontWeight: 700 }}>Your Profile</h3>
             <ProfileForm token={token} user={user} onClose={() => setProfileOpen(false)} onUsernameUpdated={(newName) => {
               // update local storage user preview if present
               try {
@@ -129,8 +161,17 @@ export default ProfileDropdown;
 
 // Modal styles and ProfileForm component
 const modalStyles = {
-  backdrop: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 },
-  modal: { width: 520, maxWidth: '94%', background: '#fff', borderRadius: 8, padding: 18, boxShadow: '0 24px 48px rgba(2,6,23,0.32)' }
+  backdrop: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 },
+  modal: {
+    position: 'relative',
+    width: 520,
+    maxWidth: '94%',
+    background: 'linear-gradient(135deg, #0b1220 0%, #123169 60%)',
+    color: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    boxShadow: '0 30px 70px rgba(2,6,23,0.6)'
+  }
 };
 
 // Attach modal styles to exported styles for reuse
@@ -205,12 +246,12 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
   return (
     <div>
       <div style={{ marginBottom: 8 }}>
-        <strong>Email:</strong>
-        <div style={{ marginTop: 4, color: '#333', wordBreak: 'break-all' }}>{profile.email}</div>
+        <strong style={{ color: 'inherit' }}>Email:</strong>
+        <div style={{ marginTop: 4, color: 'inherit', wordBreak: 'break-all', fontWeight: 500 }}>{profile.email}</div>
         {profile.username ? (
-          <div style={{ marginTop: 8, color: '#222', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <strong style={{ fontWeight: 600 }}>Username:</strong>
-            <span style={{ marginLeft: 6, fontWeight: 600 }}>{profile.username}</span>
+          <div style={{ marginTop: 8, color: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <strong style={{ fontWeight: 600, color: 'inherit' }}>Username:</strong>
+            <span style={{ marginLeft: 6, fontWeight: 600, color: 'inherit' }}>{profile.username}</span>
             <button
               type="button"
               onClick={() => {
@@ -237,14 +278,20 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       {/* Username edit container: hidden until user clicks edit */}
       {editingUsername && (
         <div style={{ marginBottom: 8 }}>
-          <label style={{ display: 'block', marginBottom: 4 }}>Username</label>
+          <label style={{ display: 'block', marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>Username</label>
           <div style={{ display: 'flex', gap: 8 }}>
-            <input ref={usernameInputRef} placeholder="(empty)" value={username} onChange={e => setUsername(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+            <input
+              ref={usernameInputRef}
+              placeholder="(empty)"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              style={{ padding: 8, width: '100%', boxSizing: 'border-box', background: '#fff', color: '#000', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }}
+            />
             <button
               type="button"
               onClick={() => { setEditingUsername(false); setUsername((profile && profile.username) || ''); setNotice(null); }}
               className="btn"
-              style={{ alignSelf: 'center' }}
+              style={{ alignSelf: 'center', color: 'inherit', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', padding: '6px 10px' }}
             >
               Cancel
             </button>
@@ -257,13 +304,13 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
         <div>
           <hr />
           <div style={{ marginBottom: 8 }}>
-            <label style={{ display: 'block', marginBottom: 4 }}>Current password</label>
+            <label style={{ display: 'block', marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>Current password</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
-                style={{ padding: 8, width: '100%', boxSizing: 'border-box' }}
+                style={{ padding: 8, width: '100%', boxSizing: 'border-box', background: '#fff', color: '#000', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }}
                 autoComplete="current-password"
                 aria-label="Current password"
               />
@@ -271,7 +318,7 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
                 type="button"
                 onClick={() => setShowCurrentPassword(s => !s)}
                 className="btn"
-                style={{ padding: '6px 10px', alignSelf: 'center' }}
+                style={{ padding: '6px 10px', alignSelf: 'center', color: 'inherit', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)' }}
                 aria-pressed={showCurrentPassword}
                 aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
               >
@@ -280,13 +327,13 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
             </div>
           </div>
           <div style={{ marginBottom: 8 }}>
-            <label style={{ display: 'block', marginBottom: 4 }}>New password</label>
+            <label style={{ display: 'block', marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>New password</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                style={{ padding: 8, width: '100%', boxSizing: 'border-box' }}
+                style={{ padding: 8, width: '100%', boxSizing: 'border-box', background: '#fff', color: '#000', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }}
                 autoComplete="new-password"
                 aria-label="New password"
               />
@@ -294,7 +341,7 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
                 type="button"
                 onClick={() => setShowNewPassword(s => !s)}
                 className="btn"
-                style={{ padding: '6px 10px', alignSelf: 'center' }}
+                style={{ padding: '6px 10px', alignSelf: 'center', color: 'inherit', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)' }}
                 aria-pressed={showNewPassword}
                 aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
               >
@@ -307,11 +354,16 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
         <div>
-          <button onClick={saveUsername} className="btn btn-primary" disabled={loading || !editingUsername}>{loading ? 'Saving...' : 'Save'}</button>
+          {(editingUsername || showPasswordForm) && (
+            <button onClick={saveUsername} className="btn btn-primary" disabled={loading || !editingUsername}>{loading ? 'Saving...' : 'Save'}</button>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => { if (showPasswordForm) { setShowPasswordForm(false); setCurrentPassword(''); setNewPassword(''); setNotice(null); } else { onClose(); } }} className="btn" style={{ background: 'transparent' }} disabled={loading}>{showPasswordForm ? 'Cancel' : 'Close'}</button>
+          {showPasswordForm ? (
+            <button onClick={() => { setShowPasswordForm(false); setCurrentPassword(''); setNewPassword(''); setNotice(null); }} className="btn" style={{ background: 'transparent' }} disabled={loading}>Cancel</button>
+          ) : null}
+
           {!showPasswordForm ? (
             <button onClick={() => setShowPasswordForm(true)} className="btn btn-secondary" disabled={loading}>Change password</button>
           ) : (
@@ -321,7 +373,7 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
       </div>
 
       {notice && (
-        <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: notice.type === 'error' ? '#fee' : '#eef6ff', color: notice.type === 'error' ? '#900' : '#063' }}>{notice.text}</div>
+        <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: notice.type === 'error' ? 'rgba(255,69,58,0.12)' : 'rgba(34,197,94,0.08)', color: notice.type === 'error' ? '#ffb4b4' : '#bbf7d0' }}>{notice.text}</div>
       )}
     </div>
   );
