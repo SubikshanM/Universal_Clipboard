@@ -62,6 +62,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Clear user-specific theme preference before logging out
+    if (user && user.email) {
+      const themeKey = `theme_${user.email}`;
+      localStorage.removeItem(themeKey);
+    }
+    
+    // Clear dark mode from body
+    document.body.classList.remove('dark-mode');
+    
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');

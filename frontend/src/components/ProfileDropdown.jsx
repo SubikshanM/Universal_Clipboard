@@ -314,28 +314,36 @@ function ProfileForm({ token, user, onClose, updateUser }) {
             </button>
           )}
         </div>
+
+        {/* Username edit container: hidden until user clicks edit */}
+        {editingUsername && (
+          <div style={{ marginBottom: 8, marginTop: 8 }}>
+            <label style={{ display: 'block', marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>Username</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                ref={usernameInputRef}
+                placeholder="(empty)"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                style={{ padding: 8, width: '100%', boxSizing: 'border-box', background: '#fff', color: '#000', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Save and Cancel buttons for username editing */}
+        {editingUsername && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+            <button onClick={saveUsername} className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+            <button onClick={() => { setEditingUsername(false); setUsername((profile && profile.username) || ''); setNotice(null); }} className="btn" style={{ background: '#dc3545', border: '1px solid #dc3545', color: 'white' }} disabled={loading}>Cancel</button>
+          </div>
+        )}
         
-        {/* Change password button - positioned directly below username */}
+        {/* Change password button - positioned after username section */}
         <div style={{ marginTop: 8 }}>
           <button onClick={() => setShowPasswordForm(true)} className="btn btn-secondary" disabled={loading || showPasswordForm} style={{ fontSize: 14 }}>Change password</button>
         </div>
       </div>
-
-      {/* Username edit container: hidden until user clicks edit */}
-      {editingUsername && (
-        <div style={{ marginBottom: 8 }}>
-          <label style={{ display: 'block', marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>Username</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              ref={usernameInputRef}
-              placeholder="(empty)"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              style={{ padding: 8, width: '100%', boxSizing: 'border-box', background: '#fff', color: '#000', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Password area is hidden until user requests to change password */}
       {showPasswordForm && (
@@ -391,13 +399,6 @@ function ProfileForm({ token, user, onClose, updateUser }) {
       )}
 
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 8 }}>
-        {editingUsername && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={saveUsername} className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
-            <button onClick={() => { setEditingUsername(false); setUsername((profile && profile.username) || ''); setNotice(null); }} className="btn" style={{ background: '#dc3545', border: '1px solid #dc3545', color: 'white' }} disabled={loading}>Cancel</button>
-          </div>
-        )}
-        
         {showPasswordForm && (
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={changePassword} className="btn btn-primary" disabled={loading}>{loading ? 'Working...' : 'Update password'}</button>
