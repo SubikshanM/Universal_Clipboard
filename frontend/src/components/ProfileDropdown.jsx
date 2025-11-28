@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import axios from 'axios';
 
 const ProfileDropdown = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const ref = useRef();
 
   // Close on outside click
@@ -52,16 +54,30 @@ const ProfileDropdown = () => {
       </button>
 
       {open && (
-  <div role="dialog" aria-label="Profile menu" style={{ ...styles.dropdown, background: dropdownBg, borderColor: '#e0e0e0' }}>
-          <div style={styles.row}>
-            {/* Use a span with a class so we can force-override dark-mode rules when necessary */}
-            <span className="dropdown-heading" style={{ fontSize: 14, fontWeight: 700, color: textColor }}>Signed in as</span>
+        <div role="dialog" aria-label="Profile menu" style={{ ...styles.dropdown, background: dropdownBg, borderColor: '#e0e0e0' }}>
+          <div style={{ marginBottom: 8 }}>
+            <button onClick={() => { setProfileOpen(true); setOpen(false); }} className="btn btn-primary" style={{ padding: '6px 10px', marginRight: 8 }}>Profile</button>
+            <button onClick={() => { logout(); setOpen(false); }} className="btn btn-danger" style={{ padding: '6px 10px' }}>Logout</button>
           </div>
-          <div className="dropdown-email" style={{ ...styles.email, color: textColor }}>{email}</div>
-          <div style={styles.actions}>
-            <button onClick={() => { logout(); setOpen(false); }} className="btn btn-danger" style={{ ...styles.logoutBtn }}>
-              Logout
-            </button>
+        </div>
+      )}
+
+      {/* Profile modal */}
+      {profileOpen && (
+        <div role="dialog" aria-modal="true" style={styles.modalBackdrop}>
+          <div style={styles.modal}>
+            <h3 style={{ marginTop: 0 }}>Your Profile</h3>
+            <ProfileForm token={token} onClose={() => setProfileOpen(false)} onUsernameUpdated={(newName) => {
+              // update local storage user preview if present
+              try {
+                const raw = localStorage.getItem('user');
+                if (raw) {
+                  const obj = JSON.parse(raw);
+                  obj.username = newName;
+                  localStorage.setItem('user', JSON.stringify(obj));
+                }
+              } catch (e) {}
+            }} />
           </div>
         </div>
       )}
@@ -104,4 +120,116 @@ const styles = {
 };
 
 export default ProfileDropdown;
+
+// Modal styles and ProfileForm component
+const modalStyles = {
+  backdrop: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 },
+  modal: { width: 520, maxWidth: '94%', background: '#fff', borderRadius: 8, padding: 18, boxShadow: '0 24px 48px rgba(2,6,23,0.32)' }
+};
+
+// Attach modal styles to exported styles for reuse
+styles.modalBackdrop = modalStyles.backdrop;
+styles.modal = modalStyles.modal;
+
+function ProfileForm({ token, onClose, onUsernameUpdated }) {
+  const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState(null);
+  const [profile, setProfile] = useState({ email: '', username: '' });
+  const [username, setUsername] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` } });
+        if (!mounted) return;
+        setProfile(res.data.user || {});
+        setUsername((res.data.user && res.data.user.username) || '');
+      } catch (err) {
+        setNotice({ type: 'error', text: err.response?.data?.error || 'Failed to load profile.' });
+      } finally { setLoading(false); }
+    };
+    fetchProfile();
+    return () => { mounted = false; };
+  }, [token]);
+
+  const saveUsername = async () => {
+    if (!username || username.trim().length === 0) { setNotice({ type: 'error', text: 'Username cannot be empty.' }); return; }
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/auth/update-username', { username: username.trim() }, { headers: { Authorization: `Bearer ${token}` } });
+      setNotice({ type: 'success', text: res.data.message || 'Username updated.' });
+      onUsernameUpdated && onUsernameUpdated(username.trim());
+    } catch (err) {
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Failed to update username.' });
+    } finally { setLoading(false); }
+  };
+
+  const changePassword = async () => {
+    if (!currentPassword || !newPassword) { setNotice({ type: 'error', text: 'Current and new passwords are required.' }); return; }
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/auth/change-password', { currentPassword, newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+      setNotice({ type: 'success', text: res.data.message || 'Password changed.' });
+      setCurrentPassword(''); setNewPassword('');
+    } catch (err) {
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Failed to change password.' });
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8 }}>
+        <strong>Email:</strong>
+        <div style={{ marginTop: 4, color: '#333', wordBreak: 'break-all' }}>{profile.email}</div>
+        {profile.username ? (
+          <div style={{ marginTop: 6, color: '#444', fontSize: 13 }}><strong>Username:</strong> <span style={{ marginLeft: 6 }}>{profile.username}</span></div>
+        ) : null}
+      </div>
+
+      <div style={{ marginBottom: 8 }}>
+        <label style={{ display: 'block', marginBottom: 4 }}>Username</label>
+        <input placeholder="(empty)" value={username} onChange={e => setUsername(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+      </div>
+
+      {/* Password area is hidden until user requests to change password */}
+      {showPasswordForm && (
+        <div>
+          <hr />
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', marginBottom: 4 }}>Current password</label>
+            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', marginBottom: 4 }}>New password</label>
+            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+        <div>
+          <button onClick={saveUsername} className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => { if (showPasswordForm) { setShowPasswordForm(false); setCurrentPassword(''); setNewPassword(''); setNotice(null); } else { onClose(); } }} className="btn" style={{ background: 'transparent' }} disabled={loading}>{showPasswordForm ? 'Cancel' : 'Close'}</button>
+          {!showPasswordForm ? (
+            <button onClick={() => setShowPasswordForm(true)} className="btn btn-secondary" disabled={loading}>Change password</button>
+          ) : (
+            <button onClick={changePassword} className="btn btn-primary" disabled={loading}>{loading ? 'Working...' : 'Change password'}</button>
+          )}
+        </div>
+      </div>
+
+      {notice && (
+        <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: notice.type === 'error' ? '#fee' : '#eef6ff', color: notice.type === 'error' ? '#900' : '#063' }}>{notice.text}</div>
+      )}
+    </div>
+  );
+}
 

@@ -192,6 +192,7 @@ router.post('/send-otp', async (req, res) => {
 // Starts the password reset flow by sending an OTP to the user's email.
 router.post('/request-password-reset', async (req, res) => {
     const { email } = req.body || {};
+    const authMiddleware = require('../middleware/auth');
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
     try {
