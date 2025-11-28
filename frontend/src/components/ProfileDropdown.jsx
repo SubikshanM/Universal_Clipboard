@@ -73,7 +73,7 @@ const ProfileDropdown = () => {
         <div role="dialog" aria-modal="true" style={styles.modalBackdrop}>
           <div style={styles.modal}>
             <h3 style={{ marginTop: 0 }}>Your Profile</h3>
-            <ProfileForm token={token} onClose={() => setProfileOpen(false)} onUsernameUpdated={(newName) => {
+            <ProfileForm token={token} user={user} onClose={() => setProfileOpen(false)} onUsernameUpdated={(newName) => {
               // update local storage user preview if present
               try {
                 const raw = localStorage.getItem('user');
@@ -137,11 +137,12 @@ const modalStyles = {
 styles.modalBackdrop = modalStyles.backdrop;
 styles.modal = modalStyles.modal;
 
-function ProfileForm({ token, onClose, onUsernameUpdated }) {
+function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);
-  const [profile, setProfile] = useState({ email: '', username: '' });
-  const [username, setUsername] = useState('');
+  // Initialize displayed profile from client-side AuthContext user so email shows immediately
+  const [profile, setProfile] = useState({ email: (user && user.email) || '', username: (user && user.username) || '' });
+  const [username, setUsername] = useState((user && user.username) || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
