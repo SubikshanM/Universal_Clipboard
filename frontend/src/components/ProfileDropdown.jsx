@@ -273,6 +273,11 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
             </button>
           </div>
         ) : null}
+        
+        {/* Change password button - positioned directly below username */}
+        <div style={{ marginTop: 8 }}>
+          <button onClick={() => setShowPasswordForm(true)} className="btn btn-secondary" disabled={loading || showPasswordForm} style={{ fontSize: 14 }}>Change password</button>
+        </div>
       </div>
 
       {/* Username edit container: hidden until user clicks edit */}
@@ -287,14 +292,6 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
               onChange={e => setUsername(e.target.value)}
               style={{ padding: 8, width: '100%', boxSizing: 'border-box', background: '#fff', color: '#000', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }}
             />
-            <button
-              type="button"
-              onClick={() => { setEditingUsername(false); setUsername((profile && profile.username) || ''); setNotice(null); }}
-              className="btn"
-              style={{ alignSelf: 'center', color: 'inherit', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', padding: '6px 10px' }}
-            >
-              Cancel
-            </button>
           </div>
         </div>
       )}
@@ -352,24 +349,20 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-        <div>
-          {(editingUsername || showPasswordForm) && (
-            <button onClick={saveUsername} className="btn btn-primary" disabled={loading || !editingUsername}>{loading ? 'Saving...' : 'Save'}</button>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          {showPasswordForm ? (
-            <button onClick={() => { setShowPasswordForm(false); setCurrentPassword(''); setNewPassword(''); setNotice(null); }} className="btn" style={{ background: 'transparent' }} disabled={loading}>Cancel</button>
-          ) : null}
-
-          {!showPasswordForm ? (
-            <button onClick={() => setShowPasswordForm(true)} className="btn btn-secondary" disabled={loading}>Change password</button>
-          ) : (
-            <button onClick={changePassword} className="btn btn-primary" disabled={loading}>{loading ? 'Working...' : 'Change password'}</button>
-          )}
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 8 }}>
+        {editingUsername && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={saveUsername} className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+            <button onClick={() => { setEditingUsername(false); setUsername((profile && profile.username) || ''); setNotice(null); }} className="btn" style={{ background: '#dc3545', border: '1px solid #dc3545', color: 'white' }} disabled={loading}>Cancel</button>
+          </div>
+        )}
+        
+        {showPasswordForm && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={changePassword} className="btn btn-primary" disabled={loading}>{loading ? 'Working...' : 'Update password'}</button>
+            <button onClick={() => { setShowPasswordForm(false); setCurrentPassword(''); setNewPassword(''); setNotice(null); }} className="btn" style={{ background: '#dc3545', border: '1px solid #dc3545', color: 'white' }} disabled={loading}>Cancel</button>
+          </div>
+        )}
       </div>
 
       {notice && (
