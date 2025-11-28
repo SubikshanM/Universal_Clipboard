@@ -400,7 +400,7 @@ function ProfileForm({ token, user, onClose, updateUser }) {
       </div>
 
       {notice && (
-        <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: notice.type === 'error' ? 'rgba(255,69,58,0.12)' : 'rgba(34,197,94,0.08)', color: notice.type === 'error' ? '#ffb4b4' : '#bbf7d0' }}>{notice.text}</div>
+        <div style={{ marginTop: 10, marginLeft: 'auto', marginRight: 'auto', padding: 10, borderRadius: 8, background: notice.type === 'error' ? 'rgba(255,69,58,0.12)' : 'rgba(34,197,94,0.08)', color: notice.type === 'error' ? '#ffb4b4' : '#bbf7d0', textAlign: 'center', maxWidth: 'fit-content' }}>{notice.text}</div>
       )}
     </div>
   );
