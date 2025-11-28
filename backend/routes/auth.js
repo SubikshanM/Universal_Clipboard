@@ -593,11 +593,22 @@ router.post('/update-username', authMiddleware, async (req, res) => {
     try {
         const userId = req.user && req.user.id;
         const normalized = String(username).trim();
+        
+        // Check if username already exists (excluding current user)
+        const existingUser = await db.query('SELECT id FROM users WHERE username = $1 AND id != $2', [normalized, userId]);
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({ error: 'Username already exists. Please choose another one.' });
+        }
+        
         const update = await db.query('UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username', [normalized, userId]);
         if (update.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
         return res.status(200).json({ message: 'Username updated.', username: update.rows[0].username });
     } catch (err) {
         console.error('Error in POST /update-username:', err);
+        // Check for unique constraint violation
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Username already exists. Please choose another one.' });
+        }
         return res.status(500).json({ error: 'Internal server error.' });
     }
 });
@@ -623,3 +634,5 @@ router.post('/change-password', authMiddleware, async (req, res) => {
         return res.status(500).json({ error: 'Internal server error.' });
     }
 });
+
+module.exports = router;

@@ -32,6 +32,18 @@ app.get('/', (req, res) => {
     res.send('Universal Clipboard API is running...');
 });
 
+// 4. Test route to verify profile endpoints are loaded
+app.get('/api/test/endpoints', (req, res) => {
+    res.json({
+        message: 'Profile endpoints are available',
+        endpoints: [
+            'GET /api/auth/profile',
+            'POST /api/auth/update-username', 
+            'POST /api/auth/change-password'
+        ]
+    });
+});
+
 // Start the server but ensure DB tables exist first
 (async function start() {
     try {
