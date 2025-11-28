@@ -143,6 +143,8 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
   // Initialize displayed profile from client-side AuthContext user so email shows immediately
   const [profile, setProfile] = useState({ email: (user && user.email) || '', username: (user && user.username) || '' });
   const [username, setUsername] = useState((user && user.username) || '');
+  const [editingUsername, setEditingUsername] = useState(false);
+  const usernameInputRef = React.useRef();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -206,14 +208,49 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
         <strong>Email:</strong>
         <div style={{ marginTop: 4, color: '#333', wordBreak: 'break-all' }}>{profile.email}</div>
         {profile.username ? (
-          <div style={{ marginTop: 6, color: '#444', fontSize: 13 }}><strong>Username:</strong> <span style={{ marginLeft: 6 }}>{profile.username}</span></div>
+          <div style={{ marginTop: 8, color: '#222', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <strong style={{ fontWeight: 600 }}>Username:</strong>
+            <span style={{ marginLeft: 6, fontWeight: 600 }}>{profile.username}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingUsername(true);
+                // set username state to current profile username before editing
+                setUsername(profile.username || '');
+                // focus after state update
+                setTimeout(() => usernameInputRef.current && usernameInputRef.current.focus(), 0);
+              }}
+              className="btn"
+              aria-label="Edit username"
+              style={{ marginLeft: 6, padding: '4px 8px', fontSize: 13 }}
+            >
+              {/* Pencil SVG icon */}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor" />
+                <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.41l-2.34-2.34a1.003 1.003 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
         ) : null}
       </div>
 
-      <div style={{ marginBottom: 8 }}>
-        <label style={{ display: 'block', marginBottom: 4 }}>Username</label>
-        <input placeholder="(empty)" value={username} onChange={e => setUsername(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
-      </div>
+      {/* Username edit container: hidden until user clicks edit */}
+      {editingUsername && (
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block', marginBottom: 4 }}>Username</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input ref={usernameInputRef} placeholder="(empty)" value={username} onChange={e => setUsername(e.target.value)} style={{ padding: 8, width: '100%', boxSizing: 'border-box' }} />
+            <button
+              type="button"
+              onClick={() => { setEditingUsername(false); setUsername((profile && profile.username) || ''); setNotice(null); }}
+              className="btn"
+              style={{ alignSelf: 'center' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Password area is hidden until user requests to change password */}
       {showPasswordForm && (
@@ -270,7 +307,7 @@ function ProfileForm({ token, user, onClose, onUsernameUpdated }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
         <div>
-          <button onClick={saveUsername} className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+          <button onClick={saveUsername} className="btn btn-primary" disabled={loading || !editingUsername}>{loading ? 'Saving...' : 'Save'}</button>
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
