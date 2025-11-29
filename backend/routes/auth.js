@@ -635,4 +635,53 @@ router.post('/change-password', authMiddleware, async (req, res) => {
     }
 });
 
+// POST /api/auth/delete-account - delete user account and related data (requires current password)
+router.post('/delete-account', authMiddleware, async (req, res) => {
+    const { currentPassword } = req.body || {};
+    if (!currentPassword) return res.status(400).json({ error: 'Current password is required to delete account.' });
+
+    const userId = req.user && req.user.id;
+    if (!userId) return res.status(400).json({ error: 'User id missing from token.' });
+
+    // We'll use a transaction to ensure consistent deletion across tables
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+        // Fetch the user's email and password_hash
+        const uRes = await client.query('SELECT email, password_hash FROM users WHERE id = $1', [userId]);
+        if (uRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'User not found.' });
+        }
+        const userRow = uRes.rows[0];
+
+        // Verify password
+        const match = await bcrypt.compare(currentPassword, userRow.password_hash);
+        if (!match) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Current password is incorrect.' });
+        }
+
+        const email = userRow.email;
+
+        // Delete OTPs and outbox entries for this email
+        await client.query('DELETE FROM signup_otps WHERE email = $1', [email]);
+        await client.query('DELETE FROM signup_otp_outbox WHERE email = $1', [email]);
+        await client.query('DELETE FROM password_reset_otps WHERE email = $1', [email]);
+
+        // Delete the user. clipboard_data has ON DELETE CASCADE so related clipboard_data rows will be removed.
+        await client.query('DELETE FROM users WHERE id = $1', [userId]);
+
+        await client.query('COMMIT');
+
+        return res.status(200).json({ message: 'Account and related data deleted successfully.' });
+    } catch (err) {
+        try { await client.query('ROLLBACK'); } catch (e) {}
+        console.error('Error in POST /delete-account:', err);
+        return res.status(500).json({ error: 'Internal server error while deleting account.' });
+    } finally {
+        client.release();
+    }
+});
+
 module.exports = router;
