@@ -185,6 +185,7 @@ styles.modalBackdrop = modalStyles.backdrop;
 styles.modal = modalStyles.modal;
 
 function ProfileForm({ token, user, onClose, updateUser }) {
+  const { logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);
   // Initialize displayed profile from client-side AuthContext user so email shows immediately
@@ -197,6 +198,10 @@ function ProfileForm({ token, user, onClose, updateUser }) {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     // Diagnostic: log the API_URL and token presence so we can debug deployed env issues
@@ -267,6 +272,36 @@ function ProfileForm({ token, user, onClose, updateUser }) {
       console.error('[ProfileForm] changePassword error', status, serverMsg || err && err.toString && err.toString());
       setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to change password${status ? ` (status ${status})` : ''}.` });
     } finally { setLoading(false); }
+  };
+
+  const deleteAccount = async () => {
+    // Require confirmation phrase and current password
+    if (deleteConfirmText !== 'DELETE') {
+      setNotice({ type: 'error', text: "Type 'DELETE' in the confirmation box to proceed." });
+      return;
+    }
+    if (!deletePassword) {
+      setNotice({ type: 'error', text: 'Please enter your current password to confirm.' });
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const res = await axios.post(`${API_URL}/delete-account`, { currentPassword: deletePassword }, { headers: { Authorization: `Bearer ${token}` } });
+      // On success, logout and close modal
+      try { logout(); } catch (e) {}
+      setNotice({ type: 'success', text: res.data.message || 'Account deleted.' });
+      setTimeout(() => {
+        onClose && onClose();
+      }, 800);
+    } catch (err) {
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.error || err.response?.data?.message;
+      console.error('[ProfileForm] deleteAccount error', status, serverMsg || err && err.toString && err.toString());
+      setNotice({ type: 'error', text: serverMsg ? `${serverMsg} (status ${status})` : `Failed to delete account${status ? ` (status ${status})` : ''}.` });
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   return (
@@ -409,6 +444,32 @@ function ProfileForm({ token, user, onClose, updateUser }) {
 
       {notice && (
         <div style={{ marginTop: 10, marginLeft: 'auto', marginRight: 'auto', padding: 10, borderRadius: 8, background: notice.type === 'error' ? 'rgba(255,69,58,0.12)' : 'rgba(34,197,94,0.08)', color: notice.type === 'error' ? '#ffb4b4' : '#bbf7d0', textAlign: 'center', maxWidth: 'fit-content' }}>{notice.text}</div>
+      )}
+      
+      {/* Delete account section */}
+      <hr style={{ marginTop: 12, borderColor: 'rgba(255,255,255,0.08)' }} />
+      <div style={{ marginTop: 8, textAlign: 'center' }}>
+        <button onClick={() => { setShowDeleteConfirm(true); setNotice(null); }} className="btn" style={{ background: '#9b1c1c', color: 'white', padding: '8px 12px', fontWeight: 700 }}>Delete account</button>
+      </div>
+
+      {/* Delete confirmation dialog (inline) */}
+      {showDeleteConfirm && (
+        <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'rgba(255,255,255,0.06)' }}>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>Confirm account deletion</div>
+          <div style={{ fontSize: 13, marginBottom: 8 }}>To permanently delete your account and all data, type <strong>DELETE</strong> below and manually enter your current password — saved password autofill will be ignored.</div>
+
+          <div style={{ marginBottom: 8, color: 'inherit', fontSize: 13 }}>
+            <strong>Email:</strong>
+            <div style={{ marginTop: 4, fontWeight: 600 }}>{profile.email}</div>
+          </div>
+
+          <input placeholder="Current password (enter manually)" type="password" value={deletePassword} onChange={e => setDeletePassword(e.target.value)} autoComplete="new-password" name="confirm_delete_password" spellCheck={false} style={{ width: '100%', padding: 8, marginBottom: 8, borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }} />
+          <input placeholder="Type DELETE to confirm" value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} style={{ width: '100%', padding: 8, marginBottom: 8, borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }} />
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button onClick={deleteAccount} className="btn btn-danger" disabled={deleteLoading}>{deleteLoading ? 'Deleting...' : 'Confirm delete'}</button>
+            <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); }} className="btn">Cancel</button>
+          </div>
+        </div>
       )}
     </div>
   );
