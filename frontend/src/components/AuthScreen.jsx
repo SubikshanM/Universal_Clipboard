@@ -284,16 +284,24 @@ export default function AuthScreen({ initialMode = 'login' }) {
             </>
           )}
 
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete={isLogin && !isResetFlow ? 'username' : 'off'}
-            name={isLogin && !isResetFlow ? 'email' : 'email-nofill'}
-            style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
-          />
+          {/* Email field: when in signup flow and past the initial email/OTP steps, show immutable email */}
+          {(!isLogin && signupStep !== 'enterEmail') ? (
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 6, color: isDark ? '#cfe8ff' : '#333' }}>Email</label>
+              <div style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}>{email}</div>
+            </div>
+          ) : (
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete={isLogin && !isResetFlow ? 'username' : 'off'}
+              name={isLogin && !isResetFlow ? 'email' : 'email-nofill'}
+              style={{ ...styles.input, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
+            />
+          )}
 
           {/* Password input hidden when initiating reset (first step) */}
           {!isResetFlow && (

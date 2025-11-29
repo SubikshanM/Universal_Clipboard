@@ -1,12 +1,64 @@
 /* Landing page styles (separate file) */
-.landing-root { min-height: 100vh; display: flex; flex-direction: column; background: linear-gradient(135deg, #e8fbfd 0%, #f6f2fb 60%); }
+.landing-root { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+
+/* Full-viewport animated gradient placed behind content so it always covers the page
+   without affecting layout. Uses pointer-events:none so it doesn't capture clicks. */
+.landing-root::before {
+  content: '';
+  position: fixed;
+  inset: 0; /* cover entire viewport */
+  z-index: 0; /* sits behind landing content but above page background */
+  pointer-events: none;
+  /* Muted gradient: softer pastel stops + reduced saturation/contrast and slight opacity */
+  background: linear-gradient(120deg, #f6eadb 0%, #f4cbd1 25%, #eecfe0 50%, #d6eef2 75%, #d3ccf5 100%);
+  background-size: 400% 400%;
+  filter: saturate(0.9) contrast(0.95);
+  opacity: 0.78;
+  animation: landingGradientShift 18s linear infinite;
+}
+
+/* Ensure landing content renders above the fixed gradient background */
+.landing-root > * { position: relative; z-index: 1; }
+
+@keyframes landingGradientShift {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 50%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root::before { animation: none !important; }
+}
 .landing-container { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px; }
+/* Subtle container borders: keep them light so they don't overpower the design.
+   Applied only to the main content containers so layout and colors remain unchanged. */
+.landing-root .hero,
+.landing-root .auth-panel,
+.landing-root .auth-panel .auth-card,
+.landing-root .dev-info {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  background-clip: padding-box;
+}
 .hero { flex: 1 1 60%; padding: 24px; }
 .hero { transform: translateY(-80px); }
 .hero-title { font-size: 40px; margin: 0 0 12px 0; color: #0f172a; }
 .hero-sub { margin: 0 0 18px 0; color: #475569; font-size: 18px; }
 .hero-features { margin: 0; padding-left: 20px; color: #334155; }
 .hero-features li { margin-bottom: 8px; }
+
+/* Add a thin black outline to landing texts so they remain readable over bright backgrounds.
+   Use -webkit-text-stroke where supported and a subtle text-shadow fallback. This is scoped
+   to `.landing-root` so other pages are unaffected. */
+/* Text outlines removed per user preference. */
+
+/* Remove harsh black borders on CTAs — rely on text-stroke and subtle shadows for contrast */
+.landing-root .mobile-cta-btn { /* keep mobile button border rules handled in mobile section */ }
+
+/* Ensure link text in the auth panel keeps the outline as well */
+.landing-root .auth-panel a { color: inherit; }
 .auth-panel { width: 420px; display: flex; align-items: center; justify-content: center; /* keep layout */ }
 
 /* Nudge the auth panel upward so it sits a bit higher on the landing page */
@@ -31,18 +83,14 @@
 .auth-wrapper input, .auth-wrapper textarea,
 .auth-panel .auth-card input, .auth-panel .auth-card textarea {
   background: white !important;
-  border: 1px solid #e6e6e6 !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
   color: #0b1220 !important;
-  /* add a subtle black outline around input containers */
-  outline: 2px solid #000 !important;
-  outline-offset: 0px !important;
 }
 
 /* Stronger outline on focus for accessibility */
 .auth-panel input:focus, .auth-panel textarea:focus,
 .auth-wrapper input:focus, .auth-wrapper textarea:focus,
 .auth-panel .auth-card input:focus, .auth-panel .auth-card textarea:focus {
-  outline: 2px solid #000 !important;
   box-shadow: 0 4px 10px rgba(2,6,23,0.06) !important;
 }
 
