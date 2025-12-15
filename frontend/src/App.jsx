@@ -219,6 +219,27 @@ const Dashboard = ({ showToast }) => {
     return () => clearInterval(timer);
   }, []);
 
+  // Client-side expiration filter - Runs every 2 seconds to remove expired clips from UI instantly
+  useEffect(() => {
+    const cleanupTimer = setInterval(() => {
+      setHistory(prev => {
+        const now = Date.now();
+        const filtered = prev.filter(item => {
+          // Keep items that don't have expiration or haven't expired yet
+          if (!item.expires_at_ts) return true;
+          return item.expires_at_ts > now;
+        });
+        // Only update state if something was filtered out
+        if (filtered.length !== prev.length) {
+          console.log(`[Client Filter] Removed ${prev.length - filtered.length} expired clip(s) from UI`);
+        }
+        return filtered;
+      });
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(cleanupTimer);
+  }, []);
+
   // Helper to format remaining milliseconds into human-readable text
   const formatRemaining = (ms) => {
     if (ms == null) return 'N/A';
