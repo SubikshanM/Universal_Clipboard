@@ -335,7 +335,7 @@ const Dashboard = ({ showToast }) => {
               : 'inset 0 2px 8px rgba(0, 0, 0, 0.05)';
           }}
         />
-        <div style={styles.ttlRow}>
+        <div className="ttlRow" style={styles.ttlRow}>
           {/* Clock icon before the label */}
           <svg
             viewBox="0 0 24 24"
@@ -606,9 +606,9 @@ const Dashboard = ({ showToast }) => {
                           ...styles.td, 
                           textAlign: 'center', 
                           borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                          padding: '16px 12px'
+                          padding: '16px 8px'
                         }}>
-                          <div className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <div className="actions" style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexWrap: 'nowrap' }}>
                             <button onClick={() => handleCopyFromHistory(item.decrypted_content)} className="btn btn-amber btn-sm" aria-label="Copy clip">
                               📋 Copy
                             </button>
@@ -651,7 +651,8 @@ const styles = {
     borderRadius: '24px',
     textAlign: 'left',
     position: 'relative',
-    zIndex: 1
+    zIndex: 1,
+    boxSizing: 'border-box'
   },
   header: { 
     flex: 1, 
@@ -806,6 +807,57 @@ const styles = {
     marginLeft: '10px', 
     flexShrink: 0,
     fontWeight: '600'
+  },
+  // Mobile responsive styles
+  '@media (max-width: 768px)': {
+    container: {
+      padding: '12px',
+      minHeight: '100vh'
+    },
+    card: {
+      padding: '16px',
+      borderRadius: '16px',
+      margin: '0',
+      maxWidth: '100%'
+    },
+    header: {
+      fontSize: '1.75rem'
+    },
+    headerRow: {
+      flexDirection: 'column',
+      gap: 12,
+      marginBottom: '20px',
+      paddingBottom: '16px'
+    },
+    sectionBox: {
+      padding: '16px',
+      marginBottom: '16px'
+    },
+    textarea: {
+      minHeight: '100px',
+      fontSize: '14px',
+      padding: '12px'
+    },
+    ttlRow: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: '8px'
+    },
+    ttlSelect: {
+      width: '100%',
+      minWidth: 'auto'
+    },
+    historyTable: {
+      minWidth: '100%',
+      fontSize: '13px'
+    },
+    td: {
+      padding: '8px'
+    },
+    th: {
+      padding: '10px 8px',
+      fontSize: '11px'
+    }
   }
 };
 
