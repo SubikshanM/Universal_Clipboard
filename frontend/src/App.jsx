@@ -236,11 +236,29 @@ const Dashboard = ({ showToast }) => {
 
 
   return (
-    <div className="app-container" style={{ ...styles.container, backgroundColor: isDark ? '#071224' : '#ffffff', color: isDark ? '#e6eef8' : '#111' }}>
-  <div className="app-card" style={{ ...styles.card, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111' }}>
+    <div className="app-container" style={{ 
+      ...styles.container, 
+      background: isDark 
+        ? 'linear-gradient(135deg, #0a1525 0%, #071224 50%, #0d1b2e 100%)' 
+        : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%)',
+      color: isDark ? '#e6eef8' : '#111' 
+    }}>
+  <div className="app-card" style={{ 
+    ...styles.card, 
+    background: isDark 
+      ? 'rgba(10, 21, 37, 0.6)' 
+      : 'rgba(255, 255, 255, 0.85)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
+    boxShadow: isDark 
+      ? '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1)'
+      : '0 20px 60px rgba(0, 0, 0, 0.08)',
+    color: isDark ? '#e6eef8' : '#111' 
+  }}>
   <div className="header-row" style={styles.headerRow}>
   <h1 className="app-title pop-in" style={styles.header}>Universal Clipboard</h1>
-    <div className="header-controls" style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+    <div className="header-controls" style={{ marginLeft: 'auto', display: 'flex', gap: 16, alignItems: 'center' }}>
       {/* Theme toggle inline in header so it lines up with the profile avatar */}
       <ThemeToggle />
       <ProfileDropdown />
@@ -248,14 +266,53 @@ const Dashboard = ({ showToast }) => {
   </div>
       
       {/* 1. SEND (PUSH) SECTION */}
-  <div className="section-box" style={{ ...styles.sectionBox, backgroundColor: isDark ? '#081522' : '#f9f9f9', border: `1px solid ${isDark ? '#15222e' : '#eee'}` }}>
-        <h2>1. Send Data to Cloud</h2>
+  <div className="section-box" style={{ 
+    ...styles.sectionBox, 
+    background: isDark 
+      ? 'linear-gradient(135deg, rgba(8, 21, 34, 0.8) 0%, rgba(10, 25, 40, 0.6) 100%)' 
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(249, 250, 251, 0.8) 100%)',
+    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+    boxShadow: isDark 
+      ? '0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+      : '0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)'
+  }}>
+        <h2 style={{
+          fontSize: '1.5rem',
+          fontWeight: '700',
+          marginTop: 0,
+          marginBottom: '1.2rem',
+          color: isDark ? '#e6eef8' : '#1e293b'
+        }}>1. Send Data to Cloud</h2>
         <textarea
           placeholder="Enter text to securely send..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           rows="4"
-          style={{ ...styles.textarea, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ddd'}` }}
+          style={{ 
+            ...styles.textarea, 
+            background: isDark ? 'rgba(3, 10, 18, 0.6)' : 'rgba(255, 255, 255, 0.9)',
+            color: isDark ? '#e6eef8' : '#111',
+            border: `2px solid ${isDark ? 'rgba(6, 182, 212, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+            boxShadow: isDark 
+              ? 'inset 0 2px 8px rgba(0, 0, 0, 0.3)'
+              : 'inset 0 2px 8px rgba(0, 0, 0, 0.05)',
+            transition: 'all 0.3s ease',
+            outline: 'none'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = isDark ? 'rgba(6, 182, 212, 0.5)' : 'rgba(59, 130, 246, 0.5)';
+            e.target.style.boxShadow = isDark 
+              ? '0 0 0 3px rgba(6, 182, 212, 0.1), inset 0 2px 8px rgba(0, 0, 0, 0.3)'
+              : '0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 8px rgba(0, 0, 0, 0.05)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = isDark ? 'rgba(6, 182, 212, 0.2)' : 'rgba(59, 130, 246, 0.2)';
+            e.target.style.boxShadow = isDark 
+              ? 'inset 0 2px 8px rgba(0, 0, 0, 0.3)'
+              : 'inset 0 2px 8px rgba(0, 0, 0, 0.05)';
+          }}
         />
         <div style={styles.ttlRow}>
           {/* Clock icon before the label */}
@@ -264,79 +321,278 @@ const Dashboard = ({ showToast }) => {
             xmlns="http://www.w3.org/2000/svg"
             role="img"
             aria-hidden="true"
-            style={{ ...styles.ttlClock, color: isDark ? '#e6eef8' : '#111' }}
+            style={{ 
+              ...styles.ttlClock, 
+              color: isDark ? '#06b6d4' : '#0ea5e9',
+              filter: 'drop-shadow(0 2px 4px rgba(6, 182, 212, 0.2))'
+            }}
           >
-            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.6" />
-            <path d="M12 7v5l3 2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="M12 7v5l3 2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <label htmlFor="ttl-select" style={styles.ttlLabel}>Expiration:</label>
+          <label htmlFor="ttl-select" style={{
+            ...styles.ttlLabel,
+            fontWeight: '600',
+            color: isDark ? '#e6eef8' : '#334155'
+          }}>Expiration:</label>
           <select
             id="ttl-select"
             value={ttlOption}
             onChange={(e) => setTtlOption(e.target.value)}
-            style={{ ...styles.ttlSelect, backgroundColor: isDark ? '#071224' : 'white', color: isDark ? '#e6eef8' : '#111', border: `1px solid ${isDark ? '#18303f' : '#ccc'}` }}
+            style={{ 
+              ...styles.ttlSelect, 
+              background: isDark 
+                ? `rgba(3, 10, 18, 0.6) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2306b6d4' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 12px center`
+                : `rgba(255, 255, 255, 0.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230ea5e9' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 12px center`,
+              color: isDark ? '#e6eef8' : '#111',
+              border: `2px solid ${isDark ? 'rgba(6, 182, 212, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+              boxShadow: isDark 
+                ? 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
+                : 'inset 0 2px 4px rgba(0, 0, 0, 0.05)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              paddingRight: '40px',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              MozAppearance: 'none'
+            }}
             required
           >
             <option value="">-- Select expiration --</option>
-            <option value="1hour">1 hour</option>
-            <option value="1day">1 day</option>
-            <option value="1week">1 week</option>
-            <option value="1month">1 month</option>
-            <option value="1year">1 year</option>
+            <option value="1hour">⏱️ 1 hour</option>
+            <option value="1day">📅 1 day</option>
+            <option value="1week">📆 1 week</option>
+            <option value="1month">🗓️ 1 month</option>
+            <option value="1year">🗓️ 1 year</option>
           </select>
         </div>
-        <button onClick={() => syncToServer(inputText)} className="btn btn-primary" style={{ padding: '10px 20px', fontSize: 16 }}>
-          Encrypt and Send Clip
+        <button 
+          onClick={() => syncToServer(inputText)} 
+          className="btn btn-primary" 
+          style={{ 
+            padding: '12px 28px', 
+            fontSize: '16px',
+            fontWeight: '600',
+            background: isDark
+              ? 'linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)'
+              : 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
+            border: 'none',
+            boxShadow: isDark
+              ? '0 8px 24px rgba(6, 182, 212, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2)'
+              : '0 8px 24px rgba(14, 165, 233, 0.3), 0 4px 8px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease',
+            transform: 'translateY(0)',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = isDark
+              ? '0 12px 32px rgba(6, 182, 212, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3)'
+              : '0 12px 32px rgba(14, 165, 233, 0.4), 0 6px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = isDark
+              ? '0 8px 24px rgba(6, 182, 212, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2)'
+              : '0 8px 24px rgba(14, 165, 233, 0.3), 0 4px 8px rgba(0, 0, 0, 0.1)';
+          }}
+        >
+          🔐 Encrypt and Send Clip
         </button>
       </div>
       
       {/* Current Status moved here: appears between Send and History */}
-  <div className="status-box" style={{ ...styles.statusBox, backgroundColor: isDark ? '#071224' : '#fff', border: `1px dashed ${isDark ? '#15313f' : '#ccc'}` }}>
-        <p style={{ ...styles.statusLabel, color: isDark ? '#e6eef8' : '#111' }}>Current Status:</p>
-        <p style={{ color: status.includes('Error') || status.includes('failed') ? '#ff6b6b' : '#57a773' }}>{status}</p>
+  <div className="status-box" style={{ 
+    ...styles.statusBox, 
+    background: isDark 
+      ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)'
+      : 'linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)',
+    border: `2px solid ${isDark ? 'rgba(6, 182, 212, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
+    borderRadius: '12px',
+    boxShadow: isDark
+      ? '0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+      : '0 4px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+  }}>
+        <p style={{ 
+          ...styles.statusLabel, 
+          color: isDark ? '#06b6d4' : '#0ea5e9',
+          fontWeight: '700',
+          fontSize: '14px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em'
+        }}>⚡ Current Status:</p>
+        <p style={{ 
+          color: status.includes('Error') || status.includes('failed') 
+            ? (isDark ? '#ff6b6b' : '#dc2626') 
+            : (isDark ? '#34d399' : '#10b981'),
+          fontWeight: '600',
+          fontSize: '15px'
+        }}>{status}</p>
       </div>
 
       {/* 2. HISTORY (PULL) SECTION */}
-  <div className="section-box history-section" style={{ ...styles.sectionBox, backgroundColor: isDark ? '#071824' : '#f9f9f9', border: `1px solid ${isDark ? '#12303b' : '#eee'}`, color: isDark ? '#e6eef8' : '#111' }}>
-        <h2 style={{ color: isDark ? '#e6eef8' : '#111' }}>2. Clip History</h2>
-        <p style={{ fontSize: '12px', color: isDark ? '#9fb0c6' : '#666' }}>All items below were decrypted on this device.</p>
+  <div className="section-box history-section" style={{ 
+    ...styles.sectionBox, 
+    background: isDark 
+      ? 'linear-gradient(135deg, rgba(7, 24, 36, 0.8) 0%, rgba(10, 25, 40, 0.6) 100%)' 
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(249, 250, 251, 0.8) 100%)',
+    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+    color: isDark ? '#e6eef8' : '#111',
+    boxShadow: isDark 
+      ? '0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+      : '0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)'
+  }}>
+        <h2 style={{ 
+          color: isDark ? '#e6eef8' : '#1e293b',
+          fontSize: '1.5rem',
+          fontWeight: '700',
+          marginTop: 0,
+          marginBottom: '0.5rem'
+        }}>2. Clip History</h2>
+        <p style={{ 
+          fontSize: '13px', 
+          color: isDark ? '#94a3b8' : '#64748b',
+          marginBottom: '1.5rem',
+          fontWeight: '500'
+        }}>🔓 All items below were decrypted on this device.</p>
         
         {history.length === 0 ? (
             <p style={{ fontStyle: 'italic', color: '#777' }}>No history available. Send your first clip!</p>
         ) : (
-            <div className="history-table-container" style={{ ...styles.historyTableContainer, backgroundColor: isDark ? 'transparent' : 'transparent' }}>
-              <table className="history-table" style={{ ...styles.historyTable, tableLayout: 'fixed', backgroundColor: 'transparent' }}>
+            <div className="history-table-container" style={{ 
+              ...styles.historyTableContainer, 
+              backgroundColor: 'transparent',
+              borderRadius: '8px',
+              overflow: 'hidden'
+            }}>
+              <table className="history-table" style={{ 
+                ...styles.historyTable, 
+                tableLayout: 'fixed', 
+                backgroundColor: 'transparent'
+              }}>
                 <thead>
-                  <tr>
-                    <th style={{ ...styles.th, width: '15%', textAlign: 'left', backgroundColor: 'transparent', borderBottomColor: isDark ? '#23414b' : '#eee', color: isDark ? '#cfe8ff' : '#111' }}>Time</th>
-                    <th style={{ ...styles.th, width: '55%', textAlign: 'left', backgroundColor: 'transparent', borderBottomColor: isDark ? '#23414b' : '#eee', color: isDark ? '#cfe8ff' : '#111' }}>Content</th>
-                    <th style={{ ...styles.th, width: '15%', textAlign: 'center', backgroundColor: 'transparent', borderBottomColor: isDark ? '#23414b' : '#eee', color: isDark ? '#cfe8ff' : '#111' }}>Expires In</th>
-                    <th style={{ ...styles.th, width: '15%', textAlign: 'center', backgroundColor: 'transparent', borderBottomColor: isDark ? '#23414b' : '#eee', color: isDark ? '#cfe8ff' : '#111' }}>Actions</th>
+                  <tr style={{
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)'
+                      : 'linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)'
+                  }}>
+                    <th style={{ 
+                      ...styles.th, 
+                      width: '15%', 
+                      textAlign: 'left', 
+                      backgroundColor: 'transparent', 
+                      borderBottomColor: isDark ? 'rgba(6, 182, 212, 0.3)' : 'rgba(14, 165, 233, 0.2)', 
+                      color: isDark ? '#06b6d4' : '#0284c7',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '14px 12px'
+                    }}>Time</th>
+                    <th style={{ 
+                      ...styles.th, 
+                      width: '55%', 
+                      textAlign: 'left', 
+                      backgroundColor: 'transparent', 
+                      borderBottomColor: isDark ? 'rgba(6, 182, 212, 0.3)' : 'rgba(14, 165, 233, 0.2)', 
+                      color: isDark ? '#06b6d4' : '#0284c7',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '14px 12px'
+                    }}>Content</th>
+                    <th style={{ 
+                      ...styles.th, 
+                      width: '15%', 
+                      textAlign: 'center', 
+                      backgroundColor: 'transparent', 
+                      borderBottomColor: isDark ? 'rgba(6, 182, 212, 0.3)' : 'rgba(14, 165, 233, 0.2)', 
+                      color: isDark ? '#06b6d4' : '#0284c7',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '14px 12px'
+                    }}>Expires In</th>
+                    <th style={{ 
+                      ...styles.th, 
+                      width: '15%', 
+                      textAlign: 'center', 
+                      backgroundColor: 'transparent', 
+                      borderBottomColor: isDark ? 'rgba(6, 182, 212, 0.3)' : 'rgba(14, 165, 233, 0.2)', 
+                      color: isDark ? '#06b6d4' : '#0284c7',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '14px 12px'
+                    }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((item) => (
-                      <tr key={item.id} style={styles.tr}>
-                        <td data-label="Time" style={{ ...styles.td, color: isDark ? '#cfe8ff' : '#111', borderBottomColor: isDark ? '#0f2a3a' : '#f1f1f1' }}>{item.display_date}</td>
-                        <td data-label="Content" style={{ ...styles.td, ...styles.contentTd, color: isDark ? '#cfe8ff' : '#111', borderBottomColor: isDark ? '#0f2a3a' : '#f1f1f1' }} title={item.decrypted_content}>
+                  {history.map((item, index) => (
+                      <tr 
+                        key={item.id} 
+                        style={{
+                          ...styles.tr,
+                          transition: 'all 0.3s ease',
+                          cursor: 'default'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = isDark
+                            ? 'rgba(6, 182, 212, 0.05)'
+                            : 'rgba(14, 165, 233, 0.05)';
+                          e.currentTarget.style.transform = 'scale(1.01)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        <td data-label="Time" style={{ 
+                          ...styles.td, 
+                          color: isDark ? '#94a3b8' : '#475569',
+                          borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                          fontWeight: '500',
+                          fontSize: '14px',
+                          padding: '16px 12px'
+                        }}>{item.display_date}</td>
+                        <td data-label="Content" style={{ 
+                          ...styles.td, 
+                          ...styles.contentTd, 
+                          color: isDark ? '#e2e8f0' : '#1e293b',
+                          borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                          fontWeight: '500',
+                          fontSize: '14px',
+                          padding: '16px 12px'
+                        }} title={item.decrypted_content}>
                           {item.decrypted_content.length > MAX_DISPLAY_LENGTH
                             ? item.decrypted_content.substring(0, MAX_DISPLAY_LENGTH) + '...'
                             : item.decrypted_content}
                         </td>
-                        <td data-label="Expires In" style={{ ...styles.td, textAlign: 'center', color: isDark ? '#9fb0c6' : '#111', borderBottomColor: isDark ? '#0f2a3a' : '#f1f1f1' }}>{formatRemaining(item.expires_at_ts ? item.expires_at_ts - now : null)}</td>
-                        <td data-label="Actions" style={{ ...styles.td, textAlign: 'center', borderBottomColor: isDark ? '#0f2a3a' : '#f1f1f1' }}>
+                        <td data-label="Expires In" style={{ 
+                          ...styles.td, 
+                          textAlign: 'center', 
+                          color: isDark ? '#94a3b8' : '#64748b',
+                          borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                          fontWeight: '600',
+                          fontSize: '13px',
+                          padding: '16px 12px'
+                        }}>{formatRemaining(item.expires_at_ts ? item.expires_at_ts - now : null)}</td>
+                        <td data-label="Actions" style={{ 
+                          ...styles.td, 
+                          textAlign: 'center', 
+                          borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                          padding: '16px 12px'
+                        }}>
                           <div className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             <button onClick={() => handleCopyFromHistory(item.decrypted_content)} className="btn btn-amber btn-sm" aria-label="Copy clip">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ width: 14, height: 14, verticalAlign: 'middle' }} aria-hidden="true">
-                                <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                              </svg>
-                              Copy
+                              📋 Copy
                             </button>
                             <button onClick={() => deleteClip(item.id)} className="btn btn-danger btn-sm" aria-label="Delete clip">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ width: 14, height: 14, verticalAlign: 'middle' }} aria-hidden="true">
-                                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                              </svg>
-                              Delete
+                              🗑️ Delete
                             </button>
                           </div>
                         </td>
@@ -355,37 +611,181 @@ const Dashboard = ({ showToast }) => {
   );
 };
 
-// Simple inline styling (kept the same structure but updated names)
+// Modern inline styling with glassmorphism and gradients
 const styles = {
-  // Full-viewport container — use small horizontal padding so content can be full-bleed
-  container: { minHeight: '100vh', display: 'block', paddingLeft: '20px', paddingRight: '20px', paddingTop: '24px', paddingBottom: '24px', backgroundColor: '#ffffff' },
-  // Make the card full width (full-bleed) to match the screenshot — remove rounded corners and shadow
-  card: { width: '100%', maxWidth: '100%', margin: 0, padding: '20px', border: 'none', borderRadius: 0, boxShadow: 'none', backgroundColor: 'white', textAlign: 'left' },
-  header: { flex: 1, textAlign: 'center', margin: '0' },
-  headerRow: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 },
-  loggedIn: { fontWeight: 'bold', marginBottom: '30px', textAlign: 'center' },
-  sectionBox: { border: '1px solid #eee', padding: '20px', marginBottom: '20px', borderRadius: '6px', backgroundColor: '#f9f9f9' },
-  textarea: { width: '100%', padding: '10px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '16px', boxSizing: 'border-box' },
-  sendButton: { padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' },
-  statusBox: { margin: '20px 0', padding: '15px', border: '1px dashed #ccc', borderRadius: '8px', backgroundColor: '#fff', textAlign: 'center' },
-  statusLabel: { fontWeight: 'bold', margin: '0 0 5px 0' },
-  logoutButton: { padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '20px' },
+  // Full-viewport container with gradient background
+  container: { 
+    minHeight: '100vh', 
+    display: 'block', 
+    padding: '32px 24px', 
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  // Glassmorphic card with backdrop blur
+  card: { 
+    width: '100%', 
+    maxWidth: '1400px', 
+    margin: '0 auto', 
+    padding: '32px', 
+    borderRadius: '24px',
+    textAlign: 'left',
+    position: 'relative',
+    zIndex: 1
+  },
+  header: { 
+    flex: 1, 
+    textAlign: 'center', 
+    margin: '0',
+    fontSize: '2.5rem'
+  },
+  headerRow: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: 16, 
+    marginBottom: '32px',
+    paddingBottom: '24px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+  },
+  loggedIn: { fontWeight: '700', marginBottom: '30px', textAlign: 'center' },
+  sectionBox: { 
+    padding: '28px', 
+    marginBottom: '24px', 
+    borderRadius: '16px',
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  textarea: { 
+    width: '100%', 
+    padding: '14px 16px', 
+    marginBottom: '16px', 
+    borderRadius: '10px',
+    fontSize: '15px', 
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    resize: 'vertical',
+    minHeight: '120px'
+  },
+  sendButton: { 
+    padding: '12px 28px', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '10px', 
+    cursor: 'pointer', 
+    fontSize: '16px',
+    fontWeight: '600'
+  },
+  statusBox: { 
+    margin: '24px 0', 
+    padding: '20px 24px',
+    textAlign: 'center' 
+  },
+  statusLabel: { 
+    fontWeight: '700', 
+    margin: '0 0 8px 0',
+    fontSize: '12px'
+  },
+  logoutButton: { 
+    padding: '10px 20px', 
+    backgroundColor: '#dc3545', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '10px', 
+    cursor: 'pointer', 
+    marginTop: '20px',
+    fontWeight: '600'
+  },
   historyList: { listStyle: 'none', padding: 0, margin: '15px 0' },
-  historyItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #eee', backgroundColor: 'white', marginBottom: '5px', borderRadius: '4px' },
-  historyContent: { textAlign: 'left', flexGrow: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
-  historyTime: { fontSize: '12px', color: '#999', marginRight: '10px' },
-  historyTableContainer: { overflowX: 'auto', width: '100%' },
-  historyTable: { width: '100%', borderCollapse: 'collapse', minWidth: '600px' },
-  contentTd: { overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
-  th: { textAlign: 'left', padding: '10px', borderBottom: '2px solid #eee', backgroundColor: '#fafafa', fontWeight: '600' },
-  td: { padding: '10px', borderBottom: '1px solid #f1f1f1', verticalAlign: 'top' },
+  historyItem: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    padding: '12px', 
+    backgroundColor: 'white', 
+    marginBottom: '8px', 
+    borderRadius: '10px' 
+  },
+  historyContent: { 
+    textAlign: 'left', 
+    flexGrow: 1, 
+    overflow: 'hidden', 
+    whiteSpace: 'nowrap', 
+    textOverflow: 'ellipsis' 
+  },
+  historyTime: { fontSize: '13px', color: '#999', marginRight: '12px' },
+  historyTableContainer: { 
+    overflowX: 'auto', 
+    width: '100%',
+    marginTop: '16px'
+  },
+  historyTable: { 
+    width: '100%', 
+    borderCollapse: 'separate',
+    borderSpacing: 0,
+    minWidth: '600px' 
+  },
+  contentTd: { 
+    overflow: 'hidden', 
+    whiteSpace: 'nowrap', 
+    textOverflow: 'ellipsis',
+    maxWidth: 0
+  },
+  th: { 
+    textAlign: 'left', 
+    padding: '12px', 
+    fontWeight: '700'
+  },
+  td: { 
+    padding: '12px',
+    verticalAlign: 'middle' 
+  },
   tr: {},
-  deleteButton: { padding: '6px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' },
-  ttlRow: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' },
-  ttlLabel: { fontSize: '14px', color: '#333' },
-  ttlSelect: { padding: '8px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px' },
-  ttlClock: { width: '20px', height: '20px', display: 'inline-block', flexShrink: 0 },
-  copyButton: { padding: '5px 10px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginLeft: '10px', flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }
+  deleteButton: { 
+    padding: '8px 12px', 
+    backgroundColor: '#dc3545', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '8px', 
+    cursor: 'pointer', 
+    fontSize: '13px',
+    fontWeight: '600'
+  },
+  ttlRow: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '12px', 
+    marginBottom: '20px',
+    flexWrap: 'wrap'
+  },
+  ttlLabel: { 
+    fontSize: '15px'
+  },
+  ttlSelect: { 
+    padding: '10px 14px', 
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    flex: '1',
+    minWidth: '200px'
+  },
+  ttlClock: { 
+    width: '24px', 
+    height: '24px', 
+    display: 'inline-block', 
+    flexShrink: 0 
+  },
+  copyButton: { 
+    padding: '8px 12px', 
+    backgroundColor: '#f59e0b', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '8px', 
+    cursor: 'pointer', 
+    fontSize: '13px', 
+    marginLeft: '10px', 
+    flexShrink: 0,
+    fontWeight: '600'
+  }
 };
 
 // --- Main App Component ---

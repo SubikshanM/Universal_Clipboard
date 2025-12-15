@@ -8,6 +8,27 @@ const clipboardRoutes = require('./routes/clipboard');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// --- TTL Cleanup Configuration ---
+const TTL_CLEANUP_INTERVAL_MS = 20 * 1000; // 20 seconds
+
+// TTL Cleanup Function - Deletes expired clipboard entries
+async function runTTLCleanup() {
+    try {
+        const now = new Date().toISOString();
+        const query = `
+            DELETE FROM clipboard_data
+            WHERE expiration_time IS NOT NULL
+              AND expiration_time < $1
+        `;
+        const result = await db.query(query, [now]);
+        if (result.rowCount > 0) {
+            console.log(`[TTL Cleanup] Deleted ${result.rowCount} expired clip(s) at ${new Date().toISOString()}`);
+        }
+    } catch (err) {
+        console.error('[TTL Cleanup] Error during cleanup:', err.message);
+    }
+}
+
 // --- CORS Configuration (Allow frontend access) ---
 app.use(cors({
     // Allows requests from any origin (Good for local development)
@@ -51,6 +72,17 @@ app.get('/api/test/endpoints', (req, res) => {
             console.log('Ensuring database tables exist...');
             await db.createTables();
         }
+        
+        // Run initial TTL cleanup on startup (catches up after suspension)
+        console.log('[TTL Cleanup] Running initial cleanup on startup...');
+        await runTTLCleanup();
+        
+        // Schedule TTL cleanup every 20 seconds
+        setInterval(async () => {
+            await runTTLCleanup();
+        }, TTL_CLEANUP_INTERVAL_MS);
+        console.log(`[TTL Cleanup] Scheduled to run every ${TTL_CLEANUP_INTERVAL_MS / 1000} seconds`);
+        
         app.listen(PORT, () => {
             console.log(`Server listening on port ${PORT}`);
         });

@@ -27,6 +27,30 @@ body.dark-mode strong {
   color: #e6eef8 !important;
 }
 
+/* Gradient text styling for app title */
+.app-title {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -moz-background-clip: text;
+  -moz-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.dark-mode .app-title {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -moz-background-clip: text;
+  -moz-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* Make common text and muted text readable in dark mode */
 body.dark-mode p,
 body.dark-mode span,
@@ -34,16 +58,29 @@ body.dark-mode label,
 body.dark-mode td,
 body.dark-mode th,
 body.dark-mode a {
-  color: #cfe8ff !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode h2 {
+  color: #f1f5f9 !important;
 }
 
 /* Inputs, textarea, selects */
 body.dark-mode input,
 body.dark-mode textarea,
 body.dark-mode select {
-  background: #071224 !important;
+  background: rgba(3, 10, 18, 0.7) !important;
   color: #e6eef8 !important;
-  border-color: #18303f !important;
+  border: 2px solid rgba(6, 182, 212, 0.2) !important;
+  backdrop-filter: blur(10px);
+}
+
+body.dark-mode input:focus,
+body.dark-mode textarea:focus,
+body.dark-mode select:focus {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
+  outline: none;
 }
 
 /* Buttons contrast in dark mode */
@@ -57,38 +94,113 @@ body.dark-mode button:not(.btn) {
 
 /* Reusable button classes with theme-aware overrides */
 .btn {
-  padding: 0.5rem 0.9rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 600;
   /* Ensure icon + text are horizontally aligned */
   display: inline-flex;
   align-items: center;
-  gap: 6px; /* smaller gap between icon and text */
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
 }
-.btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(100,120,255,0.12); }
-.btn:hover { transform: translateY(-2px); }
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+.btn:focus { 
+  outline: none; 
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); 
+}
+.btn:hover { 
+  transform: translateY(-2px) scale(1.02);
+}
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
 
 /* Primary (send) */
-.btn-primary { background: #007bff; color: #fff; box-shadow: 0 4px 12px rgba(0,123,255,0.08); }
-body.dark-mode .btn-primary { background: #06b6d4; color: #04202a; box-shadow: 0 10px 30px rgba(6,182,212,0.14); }
+.btn-primary { 
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); 
+  color: #fff; 
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+.btn-primary:hover {
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+}
+body.dark-mode .btn-primary { 
+  background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%); 
+  color: #fff; 
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+}
+body.dark-mode .btn-primary:hover {
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.4);
+}
 
 /* Amber (copy) */
-.btn-amber { background: #f59e0b; color: #fff; box-shadow: 0 4px 12px rgba(245,158,11,0.08); }
-body.dark-mode .btn-amber { background: #f59e0b; color: #fff; box-shadow: 0 8px 22px rgba(245,158,11,0.12); }
+.btn-amber { 
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); 
+  color: #fff; 
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+.btn-amber:hover {
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.4);
+}
+body.dark-mode .btn-amber { 
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); 
+  color: #111; 
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.3);
+}
+body.dark-mode .btn-amber:hover {
+  box-shadow: 0 8px 28px rgba(251, 191, 36, 0.4);
+}
 
 /* Danger (delete) */
-.btn-danger { background: #dc3545; color: #fff; box-shadow: 0 4px 12px rgba(220,53,69,0.08); }
-body.dark-mode .btn-danger { background: #dc3545; color: #fff; box-shadow: 0 8px 22px rgba(220,53,69,0.18); }
+.btn-danger { 
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+  color: #fff; 
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover {
+  box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+}
+body.dark-mode .btn-danger { 
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); 
+  color: #fff; 
+  box-shadow: 0 6px 20px rgba(248, 113, 113, 0.3);
+}
+body.dark-mode .btn-danger:hover {
+  box-shadow: 0 8px 28px rgba(248, 113, 113, 0.4);
+}
 
 /* Logout / accent */
 .btn-accent { background: #dc3545; color: #fff; box-shadow: 0 4px 12px rgba(220,53,69,0.08); }
 body.dark-mode .btn-accent { background: #dc3545; box-shadow: 0 10px 30px rgba(220,53,69,0.18); }
 
 /* Small variant for table actions */
-.btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 6px; }
+.btn-sm { 
+  padding: 8px 14px; 
+  font-size: 13px; 
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
 
 /* Make SVG icons inside buttons align nicely with text */
 .btn svg { display: inline-block; vertical-align: middle; }
@@ -123,6 +235,39 @@ body.dark-mode .btn-toggle:hover {
 
 /* Make box-sizing consistent so padding doesn't increase element width and cause overflow */
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+}
 
 a {
   font-weight: 500;
@@ -159,10 +304,18 @@ input, textarea, select, [contenteditable] {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.75em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 /* Title pop-in animation: starts very small then grows to steady size */
-.app-title { display: block; width: 100%; text-align: center; }
 .pop-in { transform: scale(0.72); opacity: 0; animation: popIn 5000ms cubic-bezier(.2,.9,.3,1) both; }
 
 @keyframes popIn {
@@ -173,6 +326,41 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .pop-in { animation: none !important; transform: none !important; opacity: 1 !important; }
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Pulse animation for status indicators */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 button {
@@ -271,6 +459,20 @@ body.dark-mode .btn-toggle,
 
   /* Slightly larger touch targets for avatar/toggle on mobile */
   .avatar-btn, .btn-toggle { width: 44px !important; height: 44px !important; }
+}
+
+/* Floating animation for subtle movement */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
 }
 
 /* Entrance animation for login card: spins while dropping into place */
