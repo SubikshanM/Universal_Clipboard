@@ -1,30 +1,91 @@
-/* Minimal, rebuilt sliding toggle — simple and precise */
-.daynight-toggle{background:transparent;border:0;padding:0;display:inline-block;cursor:pointer}
+/* Enhanced interactive sliding toggle with glowing effects */
+.daynight-toggle{
+  background:transparent;
+  border:0;
+  padding:0;
+  display:inline-block;
+  cursor:pointer;
+  transition: transform 0.2s ease;
+}
 .daynight-toggle:focus{outline:none}
+.daynight-toggle:hover{
+  transform: scale(1.05);
+}
+.daynight-toggle:active{
+  transform: scale(0.95);
+}
 
 /* size variables */
-.daynight-sm{--dnt-width:44px;--dnt-height:20px;--dnt-knob:16px;--dnt-pad:2px;--dnt-ring-gap:3px}
-.daynight-md{--dnt-width:52px;--dnt-height:24px;--dnt-knob:18px;--dnt-pad:2px;--dnt-ring-gap:3px}
-.daynight-lg{--dnt-width:68px;--dnt-height:32px;--dnt-knob:24px;--dnt-pad:4px;--dnt-ring-gap:5px}
+.daynight-sm{--dnt-width:48px;--dnt-height:24px;--dnt-knob:20px;--dnt-pad:2px;--dnt-ring-gap:4px}
+.daynight-md{--dnt-width:60px;--dnt-height:30px;--dnt-knob:26px;--dnt-pad:2px;--dnt-ring-gap:4px}
+.daynight-lg{--dnt-width:72px;--dnt-height:36px;--dnt-knob:32px;--dnt-pad:2px;--dnt-ring-gap:5px}
 
 .dnt-track{display:block;width:var(--dnt-width);height:var(--dnt-height);border-radius:calc(var(--dnt-height)/2);position:relative;padding:var(--dnt-pad);box-sizing:border-box;overflow:visible}
 
 /* outer border color variable (swaps black <-> white between modes) */
 .daynight-toggle{--dnt-outer-border: rgba(0,0,0,0.85);--dnt-ring-gap:4px}
 
-/* visual styles for light/dark track */
-.daynight-toggle.is-light .dnt-track{background:#fff;border:1px solid rgba(16,24,40,0.06);box-shadow:0 1px 0 rgba(16,24,40,0.02)}
-.daynight-toggle.is-dark .dnt-track{background:linear-gradient(180deg,#071226,#06121a);border:1px solid rgba(255,255,255,0.03);box-shadow:inset 0 2px 6px rgba(0,0,0,0.6)}
+/* visual styles for light/dark track with glowing effects */
+.daynight-toggle.is-light .dnt-track{
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border:1px solid rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+.daynight-toggle.is-light .dnt-track:hover{
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.25), 
+              0 0 30px rgba(59, 130, 246, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
 
-/* outer border ring (visual emphasis) */
-.dnt-track::after{content:'';position:absolute;left:calc(-1 * var(--dnt-ring-gap));top:calc(-1 * var(--dnt-ring-gap));right:calc(-1 * var(--dnt-ring-gap));bottom:calc(-1 * var(--dnt-ring-gap));border-radius:calc(var(--dnt-height)/2 + var(--dnt-ring-gap));border:2px solid var(--dnt-outer-border);pointer-events:none;box-sizing:border-box;z-index:0;transition:border-color 180ms ease}
+.daynight-toggle.is-dark .dnt-track{
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  border:1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2),
+              inset 0 2px 8px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s ease;
+}
+.daynight-toggle.is-dark .dnt-track:hover{
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35),
+              0 0 30px rgba(167, 139, 250, 0.25),
+              inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
 
-/* mode-specific outer border colors */
-.daynight-toggle.is-light{--dnt-outer-border: rgba(0,0,0,0.85)}
-.daynight-toggle.is-dark{--dnt-outer-border: rgba(255,255,255,0.95)}
+/* outer border ring with animated glow */
+.dnt-track::after{
+  content:'';
+  position:absolute;
+  left:calc(-1 * var(--dnt-ring-gap));
+  top:calc(-1 * var(--dnt-ring-gap));
+  right:calc(-1 * var(--dnt-ring-gap));
+  bottom:calc(-1 * var(--dnt-ring-gap));
+  border-radius:calc(var(--dnt-height)/2 + var(--dnt-ring-gap));
+  border:2px solid var(--dnt-outer-border);
+  pointer-events:none;
+  box-sizing:border-box;
+  z-index:0;
+  transition: all 0.3s ease;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
 
-/* knob */
-/* MODIFIED: Removed flex centering properties */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* mode-specific outer border colors with glow */
+.daynight-toggle.is-light{--dnt-outer-border: rgba(14, 165, 233, 0.6)}
+.daynight-toggle.is-light .dnt-track::after{
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+}
+
+.daynight-toggle.is-dark{--dnt-outer-border: rgba(167, 139, 250, 0.8)}
+.daynight-toggle.is-dark .dnt-track::after{
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+}
+
+/* knob with enhanced animations and glow */
 .dnt-knob{
   position:absolute;
   top:50%;
@@ -33,17 +94,30 @@
   height:var(--dnt-knob);
   border-radius:50%;
   transform:translateX(0) translateY(-50%);
-  /* display:flex; align-items:center; justify-content:center; REMOVED */
-  background:#fff;
-  border:1px solid rgba(16,24,40,0.06);
-  box-shadow:0 6px 14px rgba(2,6,23,0.12);
-  transition:transform 200ms cubic-bezier(.2,.8,.2,1),background 160ms ease;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border:1px solid rgba(14, 165, 233, 0.2);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3),
+              0 0 20px rgba(59, 130, 246, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.3s ease,
+              box-shadow 0.3s ease;
   z-index:2;
-  /* allow the knob pseudo-ring to show outside the knob bounds */
   overflow:visible;
 }
 
-/* knob outer ring: sits just outside the knob and follows mode color */
+/* Knob bounce animation on toggle */
+.daynight-toggle.is-dark .dnt-knob{
+  animation: knobBounce 0.6s ease;
+}
+
+@keyframes knobBounce {
+  0% { transform: translateX(0) translateY(-50%); }
+  50% { transform: translateX(calc(var(--dnt-move) * 0.6)) translateY(-50%) scale(1.1); }
+  100% { transform: translateX(var(--dnt-move)) translateY(-50%); }
+}
+
+/* knob outer ring with enhanced glow */
 .dnt-knob::after{
   content:'';
   position:absolute;
@@ -55,8 +129,15 @@
   border:2px solid var(--dnt-outer-border);
   pointer-events:none;
   box-sizing:border-box;
-  z-index:1; /* below icons (z-index:2) but above track */
-  transition:border-color 180ms ease;
+  z-index:1;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px currentColor;
+  opacity: 0.8;
+}
+
+.daynight-toggle:hover .dnt-knob::after{
+  opacity: 1;
+  box-shadow: 0 0 30px currentColor;
 }
 
 /* amount to move when switching to dark */
@@ -77,24 +158,177 @@
 }
 .dnt-icon svg{width:100%;height:100%;display:block;line-height:0}
 
-/* MODIFIED: Combined translate(-50%,-50%) with scale() to maintain centering during transition */
-.dnt-icon-sun{color:#ffb844;opacity:0;transform:translate(-50%,-50%) scale(.98);transition:opacity 160ms ease,transform 160ms ease;z-index:2}
-.dnt-icon-moon{color:#ffffff;opacity:0;transform:translate(-50%,-50%) scale(.98);transition:opacity 160ms ease,transform 160ms ease;z-index:2}
+/* Enhanced icon animations with glow and rotation */
+.dnt-icon-sun{
+  color:#fbbf24;
+  opacity:0;
+  transform:translate(-50%,-50%) scale(0.8) rotate(0deg);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index:2;
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+}
+.dnt-icon-moon{
+  color:#a78bfa;
+  opacity:0;
+  transform:translate(-50%,-50%) scale(0.8) rotate(0deg);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index:2;
+  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.6));
+}
 
-/* MODIFIED: Combined translate(-50%,-50%) with scale(1) to maintain centering when active */
-.daynight-toggle.is-light .dnt-icon-sun{opacity:1;transform:translate(-50%,-50%) scale(1);visibility:visible}
-.daynight-toggle.is-light .dnt-icon-moon{opacity:0;visibility:hidden}
-.daynight-toggle.is-dark .dnt-icon-moon{opacity:1;transform:translate(-50%,-50%) scale(1);visibility:visible}
-.daynight-toggle.is-dark .dnt-icon-sun{opacity:0;visibility:hidden}
+/* Active icons with rotation and glow */
+.daynight-toggle.is-light .dnt-icon-sun{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1) rotate(180deg);
+  visibility:visible;
+  animation: sunPulse 2s ease-in-out infinite;
+}
+.daynight-toggle.is-light .dnt-icon-moon{
+  opacity:0;
+  transform:translate(-50%,-50%) scale(0.5) rotate(-180deg);
+  visibility:hidden;
+}
+.daynight-toggle.is-dark .dnt-icon-moon{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1) rotate(180deg);
+  visibility:visible;
+  animation: moonPulse 3s ease-in-out infinite;
+}
+.daynight-toggle.is-dark .dnt-icon-sun{
+  opacity:0;
+  transform:translate(-50%,-50%) scale(0.5) rotate(-180deg);
+  visibility:hidden;
+}
 
-/* knob color in dark mode */
-.daynight-toggle.is-dark .dnt-knob{background:#0f1113;border:1px solid rgba(255,255,255,0.06);box-shadow:0 6px 16px rgba(0,0,0,0.6)}
+@keyframes sunPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6)); }
+  50% { filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.9)); }
+}
 
-/* focus ring */
-.daynight-toggle:focus .dnt-track{box-shadow:0 0 0 4px rgba(99,102,241,0.12)}
+@keyframes moonPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.6)); }
+  50% { filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.9)); }
+}
+
+/* knob color in dark mode with gradient and glow */
+.daynight-toggle.is-dark .dnt-knob{
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  border:1px solid rgba(167, 139, 250, 0.3);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4),
+              0 0 20px rgba(167, 139, 250, 0.3),
+              inset 0 1px 0 rgba(167, 139, 250, 0.1);
+}
+
+/* Enhanced focus ring with glow */
+.daynight-toggle:focus .dnt-track{
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.2),
+              0 0 20px rgba(99,102,241,0.3);
+}
+
+/* Stars animation for dark mode */
+.stars-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--dnt-height)/2);
+  z-index: 1;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 2s ease-in-out infinite;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+.star-1 {
+  top: 25%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.star-2 {
+  top: 50%;
+  left: 70%;
+  width: 1.5px;
+  height: 1.5px;
+  animation-delay: 0.5s;
+}
+
+.star-3 {
+  top: 65%;
+  left: 35%;
+  width: 1px;
+  height: 1px;
+  animation-delay: 1s;
+}
+
+.star-4 {
+  top: 35%;
+  left: 55%;
+  width: 1.5px;
+  height: 1.5px;
+  animation-delay: 1.5s;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
+}
+
+/* Sun rays animation */
+.sun-rays {
+  animation: rotateSunRays 20s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes rotateSunRays {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Crater subtle pulse */
+.crater {
+  animation: craterPulse 4s ease-in-out infinite;
+}
+
+@keyframes craterPulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.25; }
+}
+
+/* Enhanced knob hover effect */
+.daynight-toggle.is-light:hover .dnt-knob {
+  transform: translateX(0) translateY(-50%) scale(1.05);
+}
+.daynight-toggle.is-dark:hover .dnt-knob {
+  transform: translateX(var(--dnt-move)) translateY(-50%) scale(1.05);
+}
+
+/* Ripple effect on click */
+.daynight-toggle:active .dnt-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--dnt-height)/2);
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  from { transform: scale(0.5); opacity: 1; }
+  to { transform: scale(1.5); opacity: 0; }
+}
 
 @media (prefers-reduced-motion:reduce){
-  .dnt-knob,.dnt-track,.dnt-icon{transition:none}
+  .dnt-knob,.dnt-track,.dnt-icon,.dnt-track::after,.dnt-knob::after,
+  .stars-container,.star,.sun-rays,.crater{
+    transition:none !important;
+    animation: none !important;
+  }
 }
 
 /* header spacing helper */
