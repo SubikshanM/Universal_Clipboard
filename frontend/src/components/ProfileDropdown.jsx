@@ -72,10 +72,24 @@ const ProfileDropdown = () => {
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
         ref={avatarBtnRef}
-        className="avatar-btn btn"
-        style={{ ...styles.avatarButton, background: avatarBg, color: isDark ? '#fff' : 'white' }}
+        className="avatar-btn btn profile-avatar-enhanced"
+        style={{ 
+          ...styles.avatarButton,
+          background: isDark 
+            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          color: '#fff',
+          position: 'relative',
+          overflow: 'visible'
+        }}
         title={email}
       >
+        {/* Animated gradient border ring */}
+        <span className="avatar-ring"></span>
+        {/* Glowing pulse effect */}
+        <span className="avatar-glow"></span>
+        {/* Status indicator dot */}
+        <span className="avatar-status-dot"></span>
         <span style={styles.avatarText}>{initial}</span>
       </button>
 
