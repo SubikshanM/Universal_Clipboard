@@ -41,6 +41,10 @@ const Dashboard = ({ showToast }) => {
   const [history, setHistory] = useState([]); // State for the history list
   const [ttlOption, setTtlOption] = useState(''); // user-selected TTL option (mandatory)
   const [now, setNow] = useState(Date.now()); // used for countdown updates
+  const [searchQuery, setSearchQuery] = useState(''); // Search filter
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null); // ID of clip to delete
+  const [isSending, setIsSending] = useState(false); // Loading state for send button
+  const [showConfetti, setShowConfetti] = useState(false); // Confetti animation trigger
   const encryptionKey = "SecureMasterKeyFromUserPassword"; 
   const MAX_DISPLAY_LENGTH = 70; // Max characters to show in history before truncation
 
@@ -134,39 +138,33 @@ const Dashboard = ({ showToast }) => {
     }
     
     try {
+      setIsSending(true);
       setStatus('Encrypting and sending data...');
       const encryptedContent = encryptContent(content, encryptionKey);
       
       const ttlSeconds = TTL_OPTIONS[ttlOption] || null;
-
-      // NOTE: The request payload uses 'encrypted_content', which the backend now reads as 'encrypted_data' from req.body.
-      // The backend code was fixed to destructure { encrypted_data, ... } from req.body, so this is fine.
-      // If the backend had been fixed to expect 'encrypted_data' in the payload, this would need a change:
-      // await axios.post(`${API_BASE_URL}/save`, { encrypted_data: encryptedContent, ... 
-      // Since the backend fix was to read `encrypted_data` from the request body (which contained `encrypted_content`), 
-      // we must ensure the backend is expecting the name in the payload that the frontend sends.
-      // The backend was fixed to read { encrypted_data, ... } from req.body, but the frontend sends { encrypted_content: ... }.
-      // Let's assume the frontend must be consistent with the database and use encrypted_data in the payload:
-      //
-      // If your original backend used req.body.encrypted_content, we must change this.
-      // Since the database column is encrypted_data, it's safer to send it as such:
       
       await axios.post(`${API_BASE_URL}/save`, {
-        // --- FIX: Change payload key to encrypted_data for consistency (Backend should be updated too if it reads encrypted_data from req.body) ---
         encrypted_data: encryptedContent, 
         ttl_seconds: ttlSeconds,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
+      // Trigger confetti animation
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+      
       setStatus('Data sent and saved successfully! Refreshing history...');
       setInputText(''); // Clear input
       setTtlOption('');
+      setIsSending(false);
       fetchHistory(); // Refresh the history list
 
     } catch (error) {
       console.error('Error syncing to server:', error);
       setStatus(`Sync error: Could not save data. (${error.message})`);
+      setIsSending(false);
     }
   };
 
@@ -186,23 +184,30 @@ const Dashboard = ({ showToast }) => {
 
   // --- Delete Handler: Remove a clip from server and UI ---
   const deleteClip = async (id) => {
-    const confirmed = window.confirm('Delete this clip? This action cannot be undone.');
-    if (!confirmed) return;
+    setDeleteConfirmId(id);
+  };
 
+  const confirmDelete = async () => {
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
+    
     try {
       setStatus('Deleting clip...');
-      // Assumption: backend supports DELETE /api/clipboard/delete/:id
       await axios.delete(`${API_BASE_URL}/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Optimistically update UI
+      // Optimistically update UI with fade out animation
       setHistory(prev => prev.filter(item => item.id !== id));
       setStatus('Clip deleted successfully.');
     } catch (error) {
       console.error('Error deleting clip:', error);
       setStatus(`Delete failed: (${error.response?.data?.message || error.message})`);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmId(null);
   };
 
 
@@ -254,6 +259,14 @@ const Dashboard = ({ showToast }) => {
     if (minutes > 0) return `${minutes}m ${seconds}s`;
     return `${seconds}s`;
   };
+
+  // Filter history based on search query
+  const filteredHistory = history.filter(item => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return item.decrypted_content?.toLowerCase().includes(query) ||
+           item.display_date?.toLowerCase().includes(query);
+  });
 
 
   return (
@@ -388,13 +401,16 @@ const Dashboard = ({ showToast }) => {
           </select>
         </div>
         <button 
-          onClick={() => syncToServer(inputText)} 
-          className="btn btn-primary" 
+          onClick={() => syncToServer(inputText)}
+          disabled={isSending}
+          className="btn btn-primary send-button-enhanced" 
           style={{ 
             padding: '12px 28px', 
             fontSize: '16px',
             fontWeight: '600',
-            background: isDark
+            background: isSending
+              ? '#94a3b8'
+              : isDark
               ? 'linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)'
               : 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
             border: 'none',
@@ -403,6 +419,9 @@ const Dashboard = ({ showToast }) => {
               : '0 8px 24px rgba(14, 165, 233, 0.3), 0 4px 8px rgba(0, 0, 0, 0.1)',
             transition: 'all 0.3s ease',
             transform: 'translateY(0)',
+            position: 'relative',
+            cursor: isSending ? 'not-allowed' : 'pointer',
+            opacity: isSending ? 0.7 : 1
           }}
           onMouseEnter={(e) => {
             e.target.style.transform = 'translateY(-2px)';
@@ -417,9 +436,29 @@ const Dashboard = ({ showToast }) => {
               : '0 8px 24px rgba(14, 165, 233, 0.3), 0 4px 8px rgba(0, 0, 0, 0.1)';
           }}
         >
-          🔐 Encrypt and Send Clip
+          {isSending ? (
+            <>
+              <span className="spinner"></span>
+              Sending...
+            </>
+          ) : (
+            <>🔐 Encrypt and Send Clip</>
+          )}
         </button>
       </div>
+
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <div className="confetti-container">
+          {[...Array(50)].map((_, i) => (
+            <div key={i} className="confetti" style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 0.5}s`,
+              backgroundColor: ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899'][Math.floor(Math.random() * 6)]
+            }}></div>
+          ))}
+        </div>
+      )}
       
       {/* Current Status moved here: appears between Send and History */}
   <div className="status-box" style={{ 
@@ -474,12 +513,89 @@ const Dashboard = ({ showToast }) => {
         <p style={{ 
           fontSize: '13px', 
           color: isDark ? '#94a3b8' : '#64748b',
-          marginBottom: '1.5rem',
+          marginBottom: '1rem',
           fontWeight: '500'
         }}>🔓 All items below were decrypted on this device.</p>
         
+        {/* Search Bar */}
+        {history.length > 0 && (
+          <div style={{ 
+            marginBottom: '1.5rem',
+            position: 'relative'
+          }}>
+            <input
+              type="text"
+              placeholder="🔍 Search clips..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+              style={{
+                width: '100%',
+                padding: '12px 16px 12px 45px',
+                borderRadius: '10px',
+                border: `2px solid ${isDark ? 'rgba(6, 182, 212, 0.3)' : 'rgba(14, 165, 233, 0.3)'}`,
+                background: isDark ? 'rgba(3, 10, 18, 0.6)' : 'rgba(255, 255, 255, 0.9)',
+                color: isDark ? '#e6eef8' : '#111',
+                fontSize: '14px',
+                fontWeight: '500',
+                outline: 'none',
+                transition: 'all 0.3s ease',
+                boxShadow: isDark 
+                  ? 'inset 0 2px 8px rgba(0, 0, 0, 0.3)'
+                  : 'inset 0 2px 8px rgba(0, 0, 0, 0.05)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = isDark ? 'rgba(6, 182, 212, 0.6)' : 'rgba(14, 165, 233, 0.6)';
+                e.target.style.boxShadow = isDark 
+                  ? '0 0 0 3px rgba(6, 182, 212, 0.1), inset 0 2px 8px rgba(0, 0, 0, 0.3)'
+                  : '0 0 0 3px rgba(14, 165, 233, 0.1), inset 0 2px 8px rgba(0, 0, 0, 0.05)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = isDark ? 'rgba(6, 182, 212, 0.3)' : 'rgba(14, 165, 233, 0.3)';
+                e.target.style.boxShadow = isDark 
+                  ? 'inset 0 2px 8px rgba(0, 0, 0, 0.3)'
+                  : 'inset 0 2px 8px rgba(0, 0, 0, 0.05)';
+              }}
+            />
+            <span style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: '18px',
+              pointerEvents: 'none'
+            }}>🔍</span>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
+        
         {history.length === 0 ? (
             <p style={{ fontStyle: 'italic', color: '#777' }}>No history available. Send your first clip!</p>
+        ) : filteredHistory.length === 0 ? (
+            <p style={{ fontStyle: 'italic', color: '#777', textAlign: 'center', padding: '20px' }}>
+              No clips found matching "{searchQuery}" 🔍
+            </p>
         ) : (
             <div className="history-table-container" style={{ 
               ...styles.historyTableContainer, 
@@ -553,7 +669,7 @@ const Dashboard = ({ showToast }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((item, index) => (
+                  {filteredHistory.map((item, index) => (
                       <tr 
                         key={item.id} 
                         style={{
@@ -626,6 +742,104 @@ const Dashboard = ({ showToast }) => {
       </div>
 
       {/* Legacy logout button removed - use profile dropdown to logout */}
+      
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div className="delete-modal" style={{
+            background: isDark 
+              ? 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%)'
+              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
+            padding: '32px',
+            borderRadius: '20px',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: isDark
+              ? '0 20px 60px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.1)'
+              : '0 20px 60px rgba(0, 0, 0, 0.2)',
+            border: `1px solid ${isDark ? 'rgba(167, 139, 250, 0.3)' : 'rgba(14, 165, 233, 0.2)'}`,
+            animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ 
+              margin: '0 0 12px 0',
+              color: isDark ? '#e6eef8' : '#1e293b',
+              fontSize: '1.5rem',
+              fontWeight: '700'
+            }}>Delete Clip?</h3>
+            <p style={{ 
+              margin: '0 0 24px 0',
+              color: isDark ? '#94a3b8' : '#64748b',
+              fontSize: '14px',
+              lineHeight: '1.6'
+            }}>
+              This action cannot be undone. The clip will be permanently deleted.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={cancelDelete}
+                className="btn"
+                style={{
+                  padding: '10px 24px',
+                  background: isDark ? 'rgba(100, 116, 139, 0.2)' : 'rgba(148, 163, 184, 0.2)',
+                  color: isDark ? '#e6eef8' : '#475569',
+                  border: `1px solid ${isDark ? 'rgba(148, 163, 184, 0.3)' : 'rgba(148, 163, 184, 0.4)'}`,
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = isDark ? 'rgba(100, 116, 139, 0.3)' : 'rgba(148, 163, 184, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = isDark ? 'rgba(100, 116, 139, 0.2)' : 'rgba(148, 163, 184, 0.2)';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="btn"
+                style={{
+                  padding: '10px 24px',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                }}
+              >
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       </div>
     </div>
