@@ -1,53 +1,334 @@
-/* Landing page styles (separate file) */
-.landing-root { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+/* Landing page styles */
+.landing-root { 
+  min-height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative;
+  overflow-x: hidden;
+}
 
-/* Full-viewport animated gradient placed behind content so it always covers the page
-   without affecting layout. Uses pointer-events:none so it doesn't capture clicks. */
+/* Animated gradient background */
 .landing-root::before {
   content: '';
   position: fixed;
-  inset: 0; /* cover entire viewport */
-  z-index: 0; /* sits behind landing content but above page background */
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
-  /* Muted gradient: softer pastel stops + reduced saturation/contrast and slight opacity */
-  background: linear-gradient(120deg, #f6eadb 0%, #f4cbd1 25%, #eecfe0 50%, #d6eef2 75%, #d3ccf5 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
   background-size: 400% 400%;
-  filter: saturate(0.9) contrast(0.95);
-  opacity: 0.78;
-  animation: landingGradientShift 18s linear infinite;
+  opacity: 0.15;
+  animation: landingGradientShift 20s ease infinite;
 }
 
-/* Ensure landing content renders above the fixed gradient background */
+/* Ensure landing content renders above background */
 .landing-root > * { position: relative; z-index: 1; }
 
 @keyframes landingGradientShift {
   0% { background-position: 0% 50%; }
-  25% { background-position: 50% 50%; }
   50% { background-position: 100% 50%; }
-  75% { background-position: 50% 50%; }
   100% { background-position: 0% 50%; }
 }
 
+/* Floating particles animation */
+.particles-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.8), transparent);
+  border-radius: 50%;
+  animation: floatParticle 20s infinite ease-in-out;
+  opacity: 0.6;
+}
+
+@keyframes floatParticle {
+  0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% { transform: translateY(-100vh) translateX(100px) scale(1); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .landing-root::before { animation: none !important; }
+  .landing-root::before, .particle { animation: none !important; }
 }
-.landing-container { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px; }
-/* Subtle container borders: keep them light so they don't overpower the design.
-   Applied only to the main content containers so layout and colors remain unchanged. */
-.landing-root .hero,
-.landing-root .auth-panel,
-.landing-root .auth-panel .auth-card,
-.landing-root .dev-info {
-  border: 1px solid rgba(0,0,0,0.06);
-  border-radius: 12px;
-  background-clip: padding-box;
+.landing-container { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 48px; 
+  width: 100%; 
+  max-width: 1400px; 
+  margin: 0 auto; 
+  padding: 40px 28px;
+  animation: fadeInUp 0.8s ease-out;
 }
-.hero { flex: 1 1 60%; padding: 24px; }
-.hero { transform: translateY(-80px); }
-.hero-title { font-size: 40px; margin: 0 0 12px 0; color: #0f172a; }
-.hero-sub { margin: 0 0 18px 0; color: #475569; font-size: 18px; }
-.hero-features { margin: 0; padding-left: 20px; color: #334155; }
-.hero-features li { margin-bottom: 8px; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero section */
+.hero { 
+  flex: 1 1 55%; 
+  padding: 40px; 
+  animation: slideInLeft 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.hero-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 24px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+.hero-title { 
+  font-size: 56px; 
+  margin: 0 0 20px 0; 
+  color: #0f172a;
+  font-weight: 800;
+  line-height: 1.2;
+  animation: fadeInDown 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(20deg); }
+}
+
+.hero-sub { 
+  margin: 0 0 40px 0; 
+  color: #64748b; 
+  font-size: 20px;
+  line-height: 1.6;
+  animation: fadeIn 0.8s ease-out 0.4s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Feature cards */
+.feature-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.8s ease-out both;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.feature-card:nth-child(1) { animation-delay: 0.6s; }
+.feature-card:nth-child(2) { animation-delay: 0.7s; }
+.feature-card:nth-child(3) { animation-delay: 0.8s; }
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.4);
+}
+
+.feature-icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 10px;
+  animation: iconFloat 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.feature-icon.animated-icon {
+  filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 6px 20px rgba(102, 126, 234, 0.5));
+}
+
+/* Lock icon animations */
+.icon-lock {
+  animation: lockShake 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes lockShake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(-3deg); }
+  20%, 40% { transform: rotate(3deg); }
+  50%, 90% { transform: rotate(0deg); }
+}
+
+.feature-card:hover .icon-lock {
+  animation: lockUnlock 0.6s ease;
+}
+
+@keyframes lockUnlock {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* Timer icon animations */
+.timer-circle {
+  animation: timerRotate 4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes timerRotate {
+  from { 
+    stroke-dashoffset: 0;
+    transform: rotate(0deg);
+  }
+  to { 
+    stroke-dashoffset: -176;
+    transform: rotate(360deg);
+  }
+}
+
+.minute-hand {
+  animation: minuteRotate 3s linear infinite;
+  transform-origin: 32px 32px;
+}
+
+@keyframes minuteRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hour-hand {
+  animation: hourRotate 8s linear infinite;
+  transform-origin: 32px 32px;
+}
+
+@keyframes hourRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Email icon animations */
+.icon-envelope-flap {
+  animation: envelopeFlap 3s ease-in-out infinite;
+  transform-origin: 32px 24px;
+}
+
+@keyframes envelopeFlap {
+  0%, 100% { transform: rotateX(0deg); }
+  50% { transform: rotateX(-15deg); }
+}
+
+.feature-card:hover .icon-envelope-flap {
+  animation: envelopeSend 0.8s ease;
+}
+
+@keyframes envelopeSend {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(-30deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+.icon-badge {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* Circle animations */
+.icon-circle {
+  stroke-dasharray: 176;
+  stroke-dashoffset: 176;
+  animation: drawCircle 2s ease-in-out forwards;
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+.feature-card:hover .icon-circle {
+  animation: pulseCircle 1s ease-in-out infinite;
+}
+
+@keyframes pulseCircle {
+  0%, 100% { stroke-width: 3; opacity: 1; }
+  50% { stroke-width: 4; opacity: 0.8; }
+}
+
+.icon-outer-ring {
+  animation: rotateRing 10s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes rotateRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.feature-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.feature-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
 
 /* Add a thin black outline to landing texts so they remain readable over bright backgrounds.
    Use -webkit-text-stroke where supported and a subtle text-shadow fallback. This is scoped
@@ -59,10 +340,18 @@
 
 /* Ensure link text in the auth panel keeps the outline as well */
 .landing-root .auth-panel a { color: inherit; }
-.auth-panel { width: 420px; display: flex; align-items: center; justify-content: center; /* keep layout */ }
+.auth-panel { 
+  width: 420px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  animation: slideInRight 0.8s ease-out;
+}
 
-/* Nudge the auth panel upward so it sits a bit higher on the landing page */
-.auth-panel { transform: translateY(-80px); }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
 /* Ensure auth panel has no white background and appears embedded in the landing */
 .auth-panel { background: transparent !important; }
@@ -128,87 +417,249 @@
 
 /* Responsive: stack on small screens */
 @media (max-width: 900px) {
-  .landing-container { flex-direction: column; padding: 18px; }
-  .hero { order: 1; width: 100%; }
-  .hero { transform: translateY(-20px); }
-  .auth-panel { order: 2; width: 100%; max-width: 480px; transform: translateY(-20px); }
-  .hero-title { font-size: 28px; }
+  .landing-container { 
+    flex-direction: column; 
+    padding: 24px 18px; 
+    gap: 32px;
+  }
+  
+  .hero { 
+    order: 1; 
+    width: 100%;
+    padding: 24px;
+  }
+  
+  .hero-title { 
+    font-size: 36px; 
+  }
+  
+  .hero-sub {
+    font-size: 18px;
+  }
+  
+  .feature-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .auth-panel { 
+    order: 2; 
+    width: 100%; 
+    max-width: 480px;
+  }
+  
+  .dev-info {
+    margin: 32px 16px 48px;
+    padding: 20px 24px;
+  }
+  
+  .dev-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
-/* Developer attribution pill (bottom-left) */
+/* Developer info section */
 .dev-info {
   position: relative;
-  margin: 28px auto 46px auto;
-  background: rgba(255,255,255,0.95);
-  color: #071224;
-  padding: 12px 18px;
-  border-radius: 16px;
-  font-size: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 12px 40px rgba(12,20,40,0.12);
+  margin: 40px auto 60px auto;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 24px 32px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   z-index: 10;
-  justify-content: center;
-  left: 0;
-  right: 0;
+  animation: fadeInUp 0.8s ease-out 1s both;
 }
-.dev-info a { color: #06b6d4; text-decoration: none; font-weight: 600; }
-.dev-link { display: inline-flex; align-items: center; gap: 10px; color: #036b78; }
-.dev-icon { width: 20px; height: 20px; display: inline-block; vertical-align: middle; filter: hue-rotate(0deg) saturate(1.1); animation: devIconHue 6s linear infinite; }
-.dev-link-text { display: inline-block; font-weight: 700; }
 
-/* Animate only the icons' hues while keeping link text a stable blue color */
-@keyframes devIconHue {
-  0% { filter: hue-rotate(0deg) saturate(1.05); }
-  50% { filter: hue-rotate(180deg) saturate(1.15); }
-  100% { filter: hue-rotate(360deg) saturate(1.05); }
+.dev-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.dev-meta {
+  font-size: 16px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.dev-meta strong {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.dev-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.dev-link { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 8px; 
+  color: #667eea;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.dev-link:hover {
+  background: rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.dev-icon { 
+  width: 20px; 
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.dev-link:hover .dev-icon {
+  transform: scale(1.2) rotate(5deg);
+}
+
+.dev-link-text { 
+  font-weight: 600;
+  font-size: 14px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dev-icon { animation: none !important; filter: none !important; }
+  .dev-link, .dev-icon { animation: none !important; }
 }
-.dev-info .dev-sep { opacity: 0.6; margin: 0 6px; }
 
 @media (max-width: 900px) {
   .dev-info { font-size: 12px; padding: 6px 10px; margin: 20px 12px; display: flex; gap: 6px; }
   .dev-link-text { display: none; }
 }
 
-/* Default: mobile CTAs hidden (desktop uses header nav) */
+/* Mobile CTAs - hidden on desktop */
 .mobile-ctas { display: none; }
+
+.mobile-cta-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-cta-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.mobile-cta-btn:hover::before {
+  transform: translateX(100%);
+}
+
+.mobile-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.mobile-cta-btn:active {
+  transform: translateY(0);
+}
 
 /* Mobile-only rules for narrow phones */
 @media (max-width: 480px) {
-  /* Keep header logo in place but hide header nav CTAs (we will render mobile CTAs under the hero) */
+  /* Hide header nav CTAs on mobile */
   .site-header nav { display: none !important; }
 
-  /* Ensure background adapts to small screens */
-  .landing-root { background-size: cover; background-position: center top; min-height: 100vh; }
-  /* Reduce top/bottom padding on very small screens so content starts nearer the top */
-  .landing-container { padding-top: 4px; padding-bottom: 4px; }
+  .landing-container { 
+    padding: 80px 16px 16px;
+    align-items: flex-start;
+  }
 
-  /* Stack content from the top on small screens and prevent the hero from taking excessive vertical space */
-  .landing-container { align-items: flex-start; justify-content: flex-start; }
+  .hero { 
+    padding: 24px 16px;
+    text-align: center;
+  }
+  
+  .hero-badge {
+    font-size: 12px;
+    padding: 6px 16px;
+  }
+  
+  .hero-title { 
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+  
+  .hero-sub { 
+    font-size: 16px; 
+    margin-bottom: 24px;
+  }
+  
+  .feature-cards {
+    margin: 24px 0;
+  }
+  
+  .feature-card {
+    padding: 20px;
+  }
 
-  /* Move title slightly down and center everything - tighten vertical spacing
-    Add significant top padding to push the entire hero content down below the fixed logo.
-  */
-  /* Increase top padding to push everything down from the top */
-  .hero { transform: none; padding: 120px 10px 0 10px; text-align: center; flex: none; margin-bottom: 0; }
-  /* Reset title margin since we're using hero padding instead */
-  .hero-title { font-size: 22px; margin-top: 0; margin-bottom: -4px; }
-  .hero-sub { font-size: 14px; margin-bottom: 12px; }
+  /* Show mobile CTAs */
+  .mobile-ctas { 
+    display: flex; 
+    gap: 12px; 
+    justify-content: center; 
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  
+  .mobile-cta-btn { 
+    padding: 12px 24px;
+    font-size: 15px;
+  }
 
-  /* Show mobile CTAs below the welcome note - minimal spacing */
-  .mobile-ctas { display: flex; gap: 6px; justify-content: center; margin: 0 0 0 0; position: relative; z-index: 10; }
-  .mobile-cta-btn { background: linear-gradient(90deg,#7c3aed,#06b6d4); color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-
-  /* Hide the desktop inline auth panel on phones by default; can be shown in-place by adding .mobile-show */
+  /* Hide auth panel by default on mobile */
   .auth-panel { display: none !important; }
-  /* Show auth inline and pull it up much closer to the CTAs */
-  .auth-panel.mobile-show { display: flex !important; justify-content: center; width: 100%; padding: 0; margin-top: -180px; }
-  .auth-panel.mobile-show .auth-card { background: #fff !important; border-radius: 12px; padding: 6px !important; box-shadow: 0 6px 12px rgba(2,6,23,0.05) !important; }
+  
+  /* Show auth panel when triggered */
+  .auth-panel.mobile-show { 
+    display: flex !important; 
+    justify-content: center; 
+    width: 100%; 
+    padding: 0;
+    margin-top: 0;
+    animation: slideInUp 0.4s ease-out;
+  }
+  
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .auth-panel.mobile-show .auth-card { 
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 16px;
+    padding: 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  }
 
   /* Mobile auth modal styles (rendered by React when requested) - kept for compatibility but not used */
   .mobile-auth-modal { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; }
@@ -221,13 +672,54 @@
   .mobile-auth-inline-wrap { width: 94%; max-width: 420px; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 12px 36px rgba(2,6,23,0.12); position: relative; }
   .mobile-auth-inline .mobile-auth-close { position: absolute; right: 10px; top: 8px; background: transparent; border: none; font-size: 20px; cursor: pointer; }
 
-  /* Make hero features more compact on phones */
-  .hero-features { padding-left: 0; display: flex; flex-direction: column; gap: 4px; align-items: center; margin-bottom: 0; }
-  .hero-features li { list-style: none; background: rgba(255,255,255,0.6); padding: 8px 10px; border-radius: 8px; width: 100%; max-width: 360px; box-shadow: 0 6px 18px rgba(12,20,40,0.04); }
+  /* Feature cards on mobile */
+  .feature-card {
+    padding: 16px;
+  }
+  
+  .feature-icon {
+    font-size: 32px;
+  }
+  
+  .feature-title {
+    font-size: 15px;
+  }
+  
+  .feature-desc {
+    font-size: 13px;
+  }
 
-  /* Make developer pill less intrusive on small screens */
-  .dev-info { position: static; margin: 12px 10px; padding: 8px 10px; box-shadow: none; background: transparent; color: #6b7280; }
-  .dev-link-text { display: none; }
+  /* Developer info on mobile */
+  .dev-info { 
+    margin: 24px 12px 32px;
+    padding: 16px 20px;
+  }
+  
+  .dev-content {
+    gap: 12px;
+  }
+  
+  .dev-meta {
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  .dev-links {
+    gap: 12px;
+  }
+  
+  .dev-link {
+    padding: 8px 12px;
+  }
+  
+  .dev-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .dev-link-text { 
+    font-size: 12px;
+  }
 
   /* Reduce the fixed logo size on very small screens so it doesn't overlap the hero title.
     Header's logo wrapper and image are styled inline in `Header.jsx`, but these class
@@ -240,3 +732,719 @@
 
 body.dark-mode .dev-info { background: rgba(6,20,30,0.85); color: #cfe8ff; }
 body.dark-mode .dev-info a { color: #aee9ff; }
+
+/* Dark mode styles */
+body.dark-mode .landing-root::before {
+  background: linear-gradient(135deg, #1e3a8a 0%, #581c87 25%, #7e22ce 50%, #0c4a6e 75%, #0e7490 100%);
+  opacity: 0.25;
+}
+
+body.dark-mode .particle {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.8), transparent);
+}
+
+body.dark-mode .hero-badge {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.2));
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #a78bfa;
+}
+
+body.dark-mode .hero-title {
+  color: #f1f5f9;
+}
+
+body.dark-mode .gradient-text {
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark-mode .hero-sub {
+  color: #cbd5e1;
+}
+
+body.dark-mode .feature-card {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+body.dark-mode .feature-card:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
+}
+
+body.dark-mode .feature-title {
+  color: #f1f5f9;
+}
+
+body.dark-mode .feature-desc {
+  color: #cbd5e1;
+}
+
+body.dark-mode .mobile-cta-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5);
+}
+
+body.dark-mode .mobile-cta-btn:hover {
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+body.dark-mode .dev-info {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.8));
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .dev-meta {
+  color: #cbd5e1;
+}
+
+body.dark-mode .dev-meta strong {
+  background: linear-gradient(135deg, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark-mode .dev-link {
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+body.dark-mode .dev-link:hover {
+  background: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+body.dark-mode .auth-panel.mobile-show .auth-card {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Stats Section */
+.stats-container {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin: 3rem 0;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 20px;
+  padding: 2rem 3rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+  min-width: 150px;
+  text-align: center;
+}
+
+.stat-card.animate-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.stat-card:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 16px 48px rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+  animation: numberPulse 2s ease-in-out infinite;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes numberPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Feature Card Enhancements */
+.feature-card {
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.feature-card.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.feature-card:nth-child(1) { transition-delay: 0.1s; }
+.feature-card:nth-child(2) { transition-delay: 0.2s; }
+.feature-card:nth-child(3) { transition-delay: 0.3s; }
+
+/* 3D Tilt Effect */
+.feature-card[data-tilt] {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.feature-card[data-tilt]:hover {
+  transform: rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(-10px) scale(1.02);
+}
+
+.feature-icon-wrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.feature-icon {
+  font-size: 3.5rem;
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  animation: iconFloat 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.2) rotate(5deg);
+  animation: iconBounce 0.6s ease;
+}
+
+.feature-icon-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.3), transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.feature-card:hover .feature-icon-glow {
+  opacity: 1;
+  animation: glowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: scale(1.2) rotate(5deg); }
+  50% { transform: scale(1.3) rotate(-5deg); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Shimmer effect on cards */
+.feature-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+.feature-card:hover .feature-shimmer {
+  left: 100%;
+}
+
+/* Typing Animation */
+.typing-animation {
+  display: inline-block;
+  position: relative;
+  animation: typingGradient 3s ease-in-out infinite;
+}
+
+@keyframes typingGradient {
+  0%, 100% { 
+    background-position: 0% 50%;
+    transform: scale(1);
+  }
+  50% { 
+    background-position: 100% 50%;
+    transform: scale(1.02);
+  }
+}
+
+/* Floating Action Button */
+.floating-action-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  z-index: 1000;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  opacity: 0;
+  animation: fabFadeIn 0.5s ease 1s forwards;
+}
+
+.floating-action-btn:hover {
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+}
+
+.floating-action-btn:active {
+  transform: translateY(-5px) scale(0.95);
+}
+
+.floating-action-btn svg {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.fab-ripple {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.floating-action-btn:active .fab-ripple {
+  animation: rippleEffect 0.6s ease;
+}
+
+@keyframes fabFadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes rippleEffect {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Button Ripple Effect */
+.btn-ripple {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: inherit;
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mobile-cta-btn:active .btn-ripple {
+  animation: btnRipple 0.6s ease;
+}
+
+@keyframes btnRipple {
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Enhanced Mobile CTAs */
+.mobile-cta-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-cta-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.mobile-cta-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.mobile-cta-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+
+.mobile-cta-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Parallax Effect for Hero Badge */
+.hero-badge {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.hero-title {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.hero-sub {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+/* Dark mode stats */
+body.dark-mode .stat-card {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+body.dark-mode .stat-card:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 16px 48px rgba(139, 92, 246, 0.3);
+}
+
+body.dark-mode .stat-number {
+  background: linear-gradient(135deg, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark-mode .stat-label {
+  color: #cbd5e1;
+}
+
+body.dark-mode .floating-action-btn {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+
+body.dark-mode .floating-action-btn:hover {
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.6);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .stats-container {
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem 2rem;
+    min-width: 120px;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .floating-action-btn {
+    bottom: 1rem;
+    right: 1rem;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .floating-action-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Enhanced Animated SVG Icons */
+.animated-icon {
+  width: 80px;
+  height: 80px;
+  filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-card:hover .animated-icon {
+  transform: scale(1.15) translateY(-5px);
+  filter: drop-shadow(0 8px 20px rgba(102, 126, 234, 0.5));
+}
+
+/* Lock Icon Animations */
+.lock-icon .lock-shackle {
+  animation: lockShake 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes lockShake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(-2deg); }
+  20%, 40% { transform: rotate(2deg); }
+  50%, 90% { transform: rotate(0deg); }
+}
+
+.lock-icon .lock-body {
+  animation: lockGlow 2s ease-in-out infinite;
+}
+
+@keyframes lockGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+.lock-icon .rotating-ring {
+  animation: rotateRing 8s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes rotateRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Timer Icon Animations */
+.timer-icon .timer-main-circle {
+  animation: timerPulse 2s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { stroke-width: 3.5; opacity: 1; }
+  50% { stroke-width: 4.5; opacity: 0.8; }
+}
+
+.timer-icon .timer-progress-circle {
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.8));
+}
+
+.feature-card:hover .timer-hour-hand,
+.feature-card:hover .timer-minute-hand {
+  filter: drop-shadow(0 0 6px rgba(118, 75, 162, 0.9));
+}
+
+/* Email Icon Animations */
+.email-icon .email-flap {
+  animation: emailFloat 2s ease-in-out infinite;
+}
+
+@keyframes emailFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.email-icon .email-badge {
+  animation: badgeBounce 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes badgeBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.email-icon .email-body {
+  animation: emailGlow 3s ease-in-out infinite;
+}
+
+@keyframes emailGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+/* Sparkle Animations */
+.sparkle-group circle {
+  animation: sparkleFloat 3s ease-in-out infinite;
+}
+
+.sparkle-group circle:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.sparkle-group circle:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.sparkle-group circle:nth-child(3) {
+  animation-delay: 1s;
+}
+
+@keyframes sparkleFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.2); }
+}
+
+/* Icon Background Circle */
+.icon-bg-circle {
+  animation: bgPulse 3s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.05); }
+}
+
+/* Enhanced hover effects for icon wrapper */
+.feature-icon-wrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
+  perspective: 1000px;
+}
+
+.feature-card:hover .feature-icon-wrapper {
+  animation: wrapperFloat 0.6s ease-in-out;
+}
+
+@keyframes wrapperFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Add a magical glow pulse on hover */
+.feature-card:hover .feature-icon-glow {
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.3), transparent 70%);
+  animation: glowExpand 1.5s ease-in-out infinite;
+}
+
+@keyframes glowExpand {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+/* Dark mode adjustments for icons */
+body.dark-mode .animated-icon {
+  filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.4));
+}
+
+body.dark-mode .feature-card:hover .animated-icon {
+  filter: drop-shadow(0 8px 20px rgba(139, 92, 246, 0.6));
+}
+
+/* Responsive icon sizing */
+@media (max-width: 768px) {
+  .animated-icon {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* Hourglass Icon Animations */
+.hourglass-icon .hourglass-frame {
+  animation: hourglassRotate 8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes hourglassRotate {
+  0%, 45% { transform: rotate(0deg); }
+  50%, 95% { transform: rotate(180deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hourglass-icon .sand-top {
+  animation: sandDrain 4s ease-in-out infinite;
+}
+
+@keyframes sandDrain {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0.3; transform: translateY(2px); }
+}
+
+.hourglass-icon .sand-bottom {
+  animation: sandFill 4s ease-in-out infinite;
+}
+
+@keyframes sandFill {
+  0% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.hourglass-icon .sand-particles circle {
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.8));
+}
+
+.feature-card:hover .hourglass-icon .hourglass-frame {
+  animation: hourglassShake 0.5s ease-in-out;
+}
+
+@keyframes hourglassShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.hourglass-pulse-ring ellipse {
+  animation: hourglassPulse 2s ease-in-out infinite;
+}
+
+@keyframes hourglassPulse {
+  0%, 100% { stroke-width: 2; opacity: 0.3; }
+  50% { stroke-width: 3; opacity: 0.5; }
+}
+
+/* Enhanced glow for hourglass */
+.feature-card:hover .hourglass-icon .icon-bg-circle {
+  animation: hourglassGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes hourglassGlow {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.1); }
+}
+
+/* Dark mode adjustments for hourglass */
+body.dark-mode .hourglass-icon path[fill*="sandGradient"] {
+  filter: brightness(1.2);
+}
