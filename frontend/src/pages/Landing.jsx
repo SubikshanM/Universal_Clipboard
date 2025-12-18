@@ -154,90 +154,186 @@ export default function Landing() {
                 <svg className="feature-icon animated-icon hourglass-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="hourglassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#667eea"/>
-                      <stop offset="50%" stopColor="#764ba2"/>
-                      <stop offset="100%" stopColor="#f093fb"/>
+                      <stop offset="0%" stopColor="#667eea">
+                        <animate attributeName="stop-color" values="#667eea;#764ba2;#f093fb;#667eea" dur="4s" repeatCount="indefinite"/>
+                      </stop>
+                      <stop offset="50%" stopColor="#764ba2">
+                        <animate attributeName="stop-color" values="#764ba2;#f093fb;#667eea;#764ba2" dur="4s" repeatCount="indefinite"/>
+                      </stop>
+                      <stop offset="100%" stopColor="#f093fb">
+                        <animate attributeName="stop-color" values="#f093fb;#667eea;#764ba2;#f093fb" dur="4s" repeatCount="indefinite"/>
+                      </stop>
                     </linearGradient>
                     <linearGradient id="sandGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                       <stop offset="0%" stopColor="#ffd700"/>
                       <stop offset="50%" stopColor="#ffb84d"/>
                       <stop offset="100%" stopColor="#ff9500"/>
                     </linearGradient>
+                    <radialGradient id="glowGradient" cx="50%" cy="50%">
+                      <stop offset="0%" stopColor="#667eea" stopOpacity="0.8"/>
+                      <stop offset="50%" stopColor="#764ba2" stopOpacity="0.4"/>
+                      <stop offset="100%" stopColor="transparent" stopOpacity="0"/>
+                    </radialGradient>
                     <filter id="glowHourglass">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                      <feComponentTransfer in="coloredBlur" result="brighterBlur">
+                        <feFuncA type="linear" slope="2"/>
+                      </feComponentTransfer>
                       <feMerge>
-                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="brighterBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                    <filter id="innerGlow">
+                      <feGaussianBlur stdDeviation="2" result="blur"/>
+                      <feComposite in="blur" in2="SourceAlpha" operator="in" result="inGlow"/>
+                      <feComponentTransfer in="inGlow">
+                        <feFuncA type="linear" slope="1.5"/>
+                      </feComponentTransfer>
+                      <feMerge>
+                        <feMergeNode in="inGlow"/>
                         <feMergeNode in="SourceGraphic"/>
                       </feMerge>
                     </filter>
                   </defs>
                   
-                  <circle className="icon-bg-circle" cx="40" cy="40" r="36" fill="url(#hourglassGradient)" opacity="0.1"/>
+                  {/* Outer glow circle */}
+                  <circle cx="40" cy="40" r="38" fill="url(#glowGradient)" opacity="0.3">
+                    <animate attributeName="opacity" values="0.2;0.4;0.2" dur="3s" repeatCount="indefinite"/>
+                  </circle>
                   
+                  <circle className="icon-bg-circle" cx="40" cy="40" r="36" fill="url(#hourglassGradient)" opacity="0.15">
+                    <animate attributeName="opacity" values="0.15;0.25;0.15" dur="4s" repeatCount="indefinite"/>
+                  </circle>
+                  
+                  {/* Multiple pulse rings */}
                   <g className="hourglass-pulse-ring">
-                    <ellipse cx="40" cy="40" rx="28" ry="32" stroke="url(#hourglassGradient)" strokeWidth="2" fill="none" opacity="0.3">
-                      <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
-                      <animate attributeName="rx" values="28;31;28" dur="2s" repeatCount="indefinite"/>
-                      <animate attributeName="ry" values="32;35;32" dur="2s" repeatCount="indefinite"/>
+                    <ellipse cx="40" cy="40" rx="28" ry="32" stroke="url(#hourglassGradient)" strokeWidth="2.5" fill="none" opacity="0.4">
+                      <animate attributeName="opacity" values="0.4;0.15;0.4" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="rx" values="28;32;28" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="ry" values="32;36;32" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="strokeWidth" values="2.5;1.5;2.5" dur="2s" repeatCount="indefinite"/>
+                    </ellipse>
+                    <ellipse cx="40" cy="40" rx="24" ry="28" stroke="url(#hourglassGradient)" strokeWidth="1.5" fill="none" opacity="0.3">
+                      <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2.5s" repeatCount="indefinite"/>
+                      <animate attributeName="rx" values="24;26;24" dur="2.5s" repeatCount="indefinite"/>
+                      <animate attributeName="ry" values="28;30;28" dur="2.5s" repeatCount="indefinite"/>
                     </ellipse>
                   </g>
                   
                   <g filter="url(#glowHourglass)">
-                    {/* Hourglass frame */}
+                    {/* Hourglass frame with enhanced styling */}
                     <path className="hourglass-frame" d="M 30 18 L 50 18 L 50 22 L 46 22 L 46 30 L 40 36 L 46 42 L 46 50 L 50 50 L 50 54 L 30 54 L 30 50 L 34 50 L 34 42 L 40 36 L 34 30 L 34 22 L 30 22 Z" 
-                      stroke="url(#hourglassGradient)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                      stroke="url(#hourglassGradient)" strokeWidth="3" fill="rgba(102, 126, 234, 0.05)" strokeLinecap="round" strokeLinejoin="round">
+                      <animate attributeName="strokeWidth" values="3;3.5;3" dur="2s" repeatCount="indefinite"/>
+                    </path>
+                    {/* Inner shadow/depth */}
+                    <path d="M 30 18 L 50 18 L 50 22 L 46 22 L 46 30 L 40 36 L 46 42 L 46 50 L 50 50 L 50 54 L 30 54 L 30 50 L 34 50 L 34 42 L 40 36 L 34 30 L 34 22 L 30 22 Z" 
+                      stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
                     
-                    {/* Top sand */}
+                    {/* Top sand with enhanced gradient */}
                     <g className="sand-top">
-                      <path d="M 35 23 L 45 23 L 45 28 L 40 33 L 35 28 Z" fill="url(#sandGradient)" opacity="0.9">
+                      <path d="M 35 23 L 45 23 L 45 28 L 40 33 L 35 28 Z" fill="url(#hourglassGradient)" opacity="0.95">
                         <animate attributeName="d" 
                           values="M 35 23 L 45 23 L 45 28 L 40 33 L 35 28 Z;M 35 23 L 45 23 L 43 25 L 40 28 L 37 25 Z;M 35 23 L 45 23 L 41 24 L 40 24 L 39 24 Z" 
                           dur="4s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.95;1;0.95" dur="2s" repeatCount="indefinite"/>
                       </path>
+                      {/* Top sand shimmer */}
+                      <ellipse cx="40" cy="25" rx="4" ry="1.5" fill="rgba(255, 255, 255, 0.5)" opacity="0.6">
+                        <animate attributeName="opacity" values="0.6;0.9;0.6" dur="1.5s" repeatCount="indefinite"/>
+                      </ellipse>
                     </g>
                     
-                    {/* Falling sand particles */}
+                    {/* Falling sand particles - enhanced with glow */}
                     <g className="sand-particles">
-                      <circle cx="40" cy="36" r="1" fill="#ffd700">
+                      <circle cx="40" cy="36" r="1.2" fill="url(#glowGradient)" filter="url(#innerGlow)">
                         <animate attributeName="cy" values="28;36;36" dur="1.5s" repeatCount="indefinite"/>
                         <animate attributeName="opacity" values="1;1;0" dur="1.5s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="1.2;0.8;0.6" dur="1.5s" repeatCount="indefinite"/>
                       </circle>
-                      <circle cx="38.5" cy="36" r="0.8" fill="#ffb84d">
+                      <circle cx="38.5" cy="36" r="1" fill="url(#glowGradient)" filter="url(#innerGlow)">
                         <animate attributeName="cy" values="30;36;36" dur="1.8s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="1;1;0" dur="1.8s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.9;0.9;0" dur="1.8s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="1;0.7;0.5" dur="1.8s" repeatCount="indefinite"/>
                       </circle>
-                      <circle cx="41.5" cy="36" r="0.8" fill="#ff9500">
+                      <circle cx="41.5" cy="36" r="1" fill="url(#glowGradient)" filter="url(#innerGlow)">
                         <animate attributeName="cy" values="29;36;36" dur="1.3s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="1;1;0" dur="1.3s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.9;0.9;0" dur="1.3s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="1;0.7;0.5" dur="1.3s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="39.5" cy="36" r="0.9" fill="url(#glowGradient)" filter="url(#innerGlow)">
+                        <animate attributeName="cy" values="31;36;36" dur="1.6s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.8;0.8;0" dur="1.6s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="40.5" cy="36" r="0.8" fill="url(#glowGradient)" filter="url(#innerGlow)">
+                        <animate attributeName="cy" values="30;36;36" dur="1.4s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.7;0.7;0" dur="1.4s" repeatCount="indefinite"/>
                       </circle>
                     </g>
                     
-                    {/* Bottom sand accumulation */}
+                    {/* Bottom sand accumulation with enhanced gradient */}
                     <g className="sand-bottom">
-                      <path d="M 35 48 L 40 42 L 45 48 L 45 51 L 35 51 Z" fill="url(#sandGradient)" opacity="0.9">
+                      <path d="M 35 48 L 40 42 L 45 48 L 45 51 L 35 51 Z" fill="url(#hourglassGradient)" opacity="0.95">
                         <animate attributeName="d" 
                           values="M 35 51 L 40 51 L 45 51 L 45 51 L 35 51 Z;M 35 50 L 40 47 L 45 50 L 45 51 L 35 51 Z;M 35 48 L 40 42 L 45 48 L 45 51 L 35 51 Z" 
                           dur="4s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.95;1;0.95" dur="2s" repeatCount="indefinite"/>
                       </path>
+                      {/* Bottom sand highlight */}
+                      <ellipse cx="40" cy="49" rx="4" ry="1" fill="rgba(255, 255, 255, 0.4)" opacity="0.5">
+                        <animate attributeName="opacity" values="0.5;0.8;0.5" dur="1.8s" repeatCount="indefinite"/>
+                      </ellipse>
                     </g>
                     
-                    {/* Center neck glow */}
-                    <circle cx="40" cy="36" r="2" fill="url(#hourglassGradient)" opacity="0.4">
-                      <animate attributeName="opacity" values="0.2;0.6;0.2" dur="2s" repeatCount="indefinite"/>
+                    {/* Center neck glow - enhanced */}
+                    <circle cx="40" cy="36" r="3" fill="url(#glowGradient)" opacity="0.5" filter="url(#innerGlow)">
+                      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="r" values="3;3.5;3" dur="2s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="40" cy="36" r="1.5" fill="rgba(255, 255, 255, 0.8)" opacity="0.8">
+                      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
                     </circle>
                   </g>
                   
-                  {/* Sparkles */}
+                  {/* Sparkles - premium enhanced */}
                   <g className="sparkle-group">
-                    <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.8">
-                      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="62" cy="28" r="1.5" fill="#fff" opacity="0.6">
-                      <animate attributeName="opacity" values="0.2;0.9;0.2" dur="2s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="60" cy="58" r="2" fill="#fff" opacity="0.7">
-                      <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/>
-                    </circle>
+                    <g>
+                      <circle cx="20" cy="25" r="2.5" fill="url(#hourglassGradient)" opacity="0.9">
+                        <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="2.5;3;2.5" dur="1.5s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="20" cy="25" r="1.2" fill="#fff" opacity="1">
+                        <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite"/>
+                      </circle>
+                    </g>
+                    <g>
+                      <circle cx="62" cy="28" r="2" fill="url(#hourglassGradient)" opacity="0.8">
+                        <animate attributeName="opacity" values="0.3;0.95;0.3" dur="2s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="2;2.5;2" dur="2s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="62" cy="28" r="1" fill="#fff" opacity="0.9">
+                        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+                      </circle>
+                    </g>
+                    <g>
+                      <circle cx="60" cy="58" r="2.2" fill="url(#hourglassGradient)" opacity="0.85">
+                        <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="2.2;2.8;2.2" dur="1.8s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="60" cy="58" r="1.1" fill="#fff" opacity="0.95">
+                        <animate attributeName="opacity" values="0.6;1;0.6" dur="1.8s" repeatCount="indefinite"/>
+                      </circle>
+                    </g>
+                    <g>
+                      <circle cx="18" cy="52" r="1.8" fill="url(#hourglassGradient)" opacity="0.75">
+                        <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2.2s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="1.8;2.3;1.8" dur="2.2s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="18" cy="52" r="0.9" fill="#fff" opacity="0.85">
+                        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.2s" repeatCount="indefinite"/>
+                      </circle>
+                    </g>
                   </g>
                 </svg>
                 <div className="feature-icon-glow"></div>

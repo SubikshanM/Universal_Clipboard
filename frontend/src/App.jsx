@@ -291,7 +291,7 @@ const Dashboard = ({ showToast }) => {
     color: isDark ? '#e6eef8' : '#111' 
   }}>
   <div className="header-row" style={styles.headerRow}>
-  <h1 className="app-title pop-in" style={styles.header}>Universal Clipboard</h1>
+  <h1 className="app-title pop-in gradient-text" style={styles.header}>Universal Clipboard</h1>
     <div className="header-controls" style={{ marginLeft: 'auto', display: 'flex', gap: 16, alignItems: 'center' }}>
       {/* Theme toggle inline in header so it lines up with the profile avatar */}
       <ThemeToggle />
@@ -300,7 +300,7 @@ const Dashboard = ({ showToast }) => {
   </div>
       
       {/* 1. SEND (PUSH) SECTION */}
-  <div className="section-box" style={{ 
+  <div className="section-box holographic glass-reflect" style={{ 
     ...styles.sectionBox, 
     background: isDark 
       ? 'linear-gradient(135deg, rgba(8, 21, 34, 0.8) 0%, rgba(10, 25, 40, 0.6) 100%)' 
@@ -403,7 +403,7 @@ const Dashboard = ({ showToast }) => {
         <button 
           onClick={() => syncToServer(inputText)}
           disabled={isSending}
-          className="btn btn-primary send-button-enhanced" 
+          className="btn btn-primary send-button-enhanced btn-shine ripple-effect btn-liquid btn-magnetic" 
           style={{ 
             padding: '12px 28px', 
             fontSize: '16px',
@@ -490,7 +490,7 @@ const Dashboard = ({ showToast }) => {
       </div>
 
       {/* 2. HISTORY (PULL) SECTION */}
-  <div className="section-box history-section" style={{ 
+  <div className="section-box history-section holographic" style={{ 
     ...styles.sectionBox, 
     background: isDark 
       ? 'linear-gradient(135deg, rgba(7, 24, 36, 0.8) 0%, rgba(10, 25, 40, 0.6) 100%)' 
