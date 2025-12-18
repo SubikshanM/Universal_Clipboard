@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 // --- TTL Cleanup Configuration ---
 const TTL_CLEANUP_INTERVAL_MS = 20 * 1000; // 20 seconds
+const OTP_CLEANUP_INTERVAL_MS = 20 * 1000; // 20 seconds
 
 // TTL Cleanup Function - Deletes expired clipboard entries
 async function runTTLCleanup() {
@@ -26,6 +27,44 @@ async function runTTLCleanup() {
         }
     } catch (err) {
         console.error('[TTL Cleanup] Error during cleanup:', err.message);
+    }
+}
+
+// OTP Cleanup Function - Deletes expired OTPs from all OTP tables
+async function runOTPCleanup() {
+    try {
+        const now = new Date().toISOString();
+        let totalDeleted = 0;
+
+        // Clean up signup_otps
+        const signupOtpQuery = `
+            DELETE FROM signup_otps
+            WHERE expires_at < $1
+        `;
+        const signupResult = await db.query(signupOtpQuery, [now]);
+        totalDeleted += signupResult.rowCount;
+
+        // Clean up signup_otp_outbox
+        const outboxQuery = `
+            DELETE FROM signup_otp_outbox
+            WHERE expires_at < $1
+        `;
+        const outboxResult = await db.query(outboxQuery, [now]);
+        totalDeleted += outboxResult.rowCount;
+
+        // Clean up password_reset_otps
+        const passwordResetQuery = `
+            DELETE FROM password_reset_otps
+            WHERE expires_at < $1
+        `;
+        const passwordResetResult = await db.query(passwordResetQuery, [now]);
+        totalDeleted += passwordResetResult.rowCount;
+
+        if (totalDeleted > 0) {
+            console.log(`[OTP Cleanup] Deleted ${totalDeleted} expired OTP(s) at ${new Date().toISOString()} (Signup: ${signupResult.rowCount}, Outbox: ${outboxResult.rowCount}, Password Reset: ${passwordResetResult.rowCount})`);
+        }
+    } catch (err) {
+        console.error('[OTP Cleanup] Error during cleanup:', err.message);
     }
 }
 
@@ -82,6 +121,16 @@ app.get('/api/test/endpoints', (req, res) => {
             await runTTLCleanup();
         }, TTL_CLEANUP_INTERVAL_MS);
         console.log(`[TTL Cleanup] Scheduled to run every ${TTL_CLEANUP_INTERVAL_MS / 1000} seconds`);
+
+        // Run initial OTP cleanup on startup (catches up after suspension)
+        console.log('[OTP Cleanup] Running initial cleanup on startup...');
+        await runOTPCleanup();
+        
+        // Schedule OTP cleanup every 20 seconds
+        setInterval(async () => {
+            await runOTPCleanup();
+        }, OTP_CLEANUP_INTERVAL_MS);
+        console.log(`[OTP Cleanup] Scheduled to run every ${OTP_CLEANUP_INTERVAL_MS / 1000} seconds`);
         
         app.listen(PORT, () => {
             console.log(`Server listening on port ${PORT}`);
