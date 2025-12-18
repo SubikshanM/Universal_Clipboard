@@ -433,7 +433,23 @@ body.dark-mode .btn-toggle,
   /* Make layout stack nicely on phones */
   .header-row { flex-direction: column; align-items: center; text-align: center; }
   .header-row h1 { font-size: 1.6rem; margin: 0; }
-  .header-controls { display: flex; gap: 8px; }
+  .header-controls { display: flex; gap: 16px !important; }
+
+  /* Center auth controls on mobile */
+  .auth-top-right,
+  body.dark-mode .auth-top-right,
+  body .auth-top-right {
+    position: fixed !important;
+    top: 10px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    margin: 0 !important;
+  }
 
   .app-container { padding-left: 12px; padding-right: 12px; }
   .app-card { width: 100%; padding: 14px; }
@@ -511,7 +527,7 @@ body.dark-mode .btn-toggle,
   min-height: auto !important;
 }
 
-.auth-top-right { position: absolute; top: 10px; right: 10px; z-index: 1100; }
+.auth-top-right { position: absolute; top: 10px; right: 10px; z-index: 1100; display: flex; align-items: center; gap: 20px; }
 .auth-top-right .btn, .auth-top-right .btn-toggle { width: 40px; height: 40px; padding: 6px; }
 
 /* --- Auth background: low-contrast animated gradient blobs --- */
@@ -656,8 +672,25 @@ body.dark-mode .btn-toggle,
   }
 
   .header-controls {
-    width: 100%;
+    width: auto !important;
     justify-content: center !important;
+    gap: 16px !important;
+  }
+
+  /* Center auth controls on mobile */
+  .auth-top-right,
+  body.dark-mode .auth-top-right,
+  body .auth-top-right {
+    position: fixed !important;
+    top: 10px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    margin: 0 !important;
   }
 
   /* Section boxes */
@@ -861,6 +894,22 @@ body.dark-mode .btn-toggle,
   .avatar-btn {
     width: 36px !important;
     height: 36px !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .profile-avatar-enhanced {
+    line-height: 1 !important;
+  }
+  
+  .profile-avatar-enhanced > span:not(.avatar-ring):not(.avatar-glow):not(.avatar-status-dot) {
+    position: relative !important;
+    z-index: 5 !important;
+    display: block !important;
+    text-align: center !important;
   }
 
   /* Landing page mobile adjustments */
@@ -974,8 +1023,25 @@ body.dark-mode .btn-toggle,
 
   .header-controls {
     margin-left: 0 !important;
-    width: 100% !important;
+    width: auto !important;
     justify-content: center !important;
+    gap: 16px !important;
+  }
+
+  /* Center auth controls on mobile */
+  .auth-top-right,
+  body.dark-mode .auth-top-right,
+  body .auth-top-right {
+    position: fixed !important;
+    top: 10px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    margin: 0 !important;
   }
 
   .app-title {
@@ -1082,11 +1148,35 @@ body.dark-mode .btn-toggle,
   }
 }
 
-
-
-
-
-
+/* Mobile: Simplify profile avatar animations for better performance */
+@media (max-width: 768px) {
+  .profile-avatar-enhanced .avatar-ring {
+    display: none !important;
+  }
+  
+  .profile-avatar-enhanced .avatar-glow {
+    display: none !important;
+  }
+  
+  .profile-avatar-enhanced .avatar-status-dot {
+    animation: none !important;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6) !important;
+  }
+  
+  .profile-avatar-enhanced::before {
+    display: none !important;
+  }
+  
+  .profile-avatar-enhanced {
+    animation: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .profile-avatar-enhanced:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+  }
+}
 
 /* ====================================
    Enhanced Profile Avatar Styles
@@ -1487,5 +1577,26 @@ body.dark-mode .avatar-glow {
   .status-box {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Password toggle button responsive styles */
+.password-toggle-btn {
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .password-toggle-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    right: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .password-toggle-btn {
+    padding: 4px 8px !important;
+    font-size: 16px !important;
+    right: 6px !important;
   }
 }

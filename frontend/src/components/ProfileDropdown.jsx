@@ -614,14 +614,14 @@ function ProfileForm({ token, user, onClose, updateUser }) {
               letterSpacing: '0.5px',
               color: 'rgba(255,255,255,0.7)'
             }}>Current password</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ position: 'relative' }}>
               <input
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
                 style={{ 
-                  padding: '12px 16px', 
-                  flex: 1,
+                  padding: '12px 75px 12px 16px', 
+                  width: '100%',
                   boxSizing: 'border-box', 
                   background: 'rgba(255,255,255,0.95)', 
                   color: '#111', 
@@ -635,24 +635,36 @@ function ProfileForm({ token, user, onClose, updateUser }) {
               />
               <button
                 type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowCurrentPassword(s => !s)}
                 style={{ 
-                  padding: '8px 16px',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '10px',
-                  color: '#fff',
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  padding: '6px 12px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '6px',
+                  color: '#3b82f6',
                   cursor: 'pointer',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: '600',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
                 }}
                 aria-pressed={showCurrentPassword}
                 aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
-                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.15)'}
-                onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(59, 130, 246, 0.25)';
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(59, 130, 246, 0.15)';
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                }}
               >
-                {showCurrentPassword ? '🙈 Hide' : '👁️ Show'}
+                {showCurrentPassword ? '👁️' : '👁️'}
               </button>
             </div>
           </div>
@@ -666,14 +678,14 @@ function ProfileForm({ token, user, onClose, updateUser }) {
               letterSpacing: '0.5px',
               color: 'rgba(255,255,255,0.7)'
             }}>New password</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ position: 'relative' }}>
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 style={{ 
-                  padding: '12px 16px', 
-                  flex: 1,
+                  padding: '12px 75px 12px 16px', 
+                  width: '100%',
                   boxSizing: 'border-box', 
                   background: 'rgba(255,255,255,0.95)', 
                   color: '#111', 
@@ -687,24 +699,36 @@ function ProfileForm({ token, user, onClose, updateUser }) {
               />
               <button
                 type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowNewPassword(s => !s)}
                 style={{ 
-                  padding: '8px 16px',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '10px',
-                  color: '#fff',
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  padding: '6px 12px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '6px',
+                  color: '#3b82f6',
                   cursor: 'pointer',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: '600',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
                 }}
                 aria-pressed={showNewPassword}
                 aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
-                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.15)'}
-                onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(59, 130, 246, 0.25)';
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(59, 130, 246, 0.15)';
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                }}
               >
-                {showNewPassword ? '🙈 Hide' : '👁️ Show'}
+                {showNewPassword ? '👁️' : '👁️'}
               </button>
             </div>
           </div>
