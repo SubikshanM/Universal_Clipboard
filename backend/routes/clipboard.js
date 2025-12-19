@@ -57,6 +57,18 @@ router.post('/save', auth, async (req, res) => {
         const row = result.rows[0];
         const expiresAtIso = row.expiration_time ? new Date(row.expiration_time).toISOString() : null;
 
+        // Emit real-time event to all connected devices for this user
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`user:${userId}`).emit('new_clip', {
+                id: row.id,
+                encrypted_data: encrypted_data,
+                created_at: row.created_at,
+                expires_at: expiresAtIso
+            });
+            console.log(`[Socket.IO] Emitted new_clip event to user:${userId}`);
+        }
+
         // Return backward-compatible response fields so existing frontend code continues to work
         res.status(201).json({
             message: 'Clip saved successfully.',
@@ -162,6 +174,15 @@ router.delete('/delete/:id', auth, async (req, res) => {
         if (deleted.rows.length === 0) {
             // Unexpected: row existed a moment ago but not now
             return res.status(404).json({ message: 'Clip not found.' });
+        }
+
+        // Emit real-time event to all connected devices for this user
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`user:${userId}`).emit('clip_deleted', {
+                id: String(deleted.rows[0].id)
+            });
+            console.log(`[Socket.IO] Emitted clip_deleted event to user:${userId}`);
         }
 
         return res.status(200).json({ success: true, id: String(deleted.rows[0].id) });

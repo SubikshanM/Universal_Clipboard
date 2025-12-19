@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './context/AuthContext';
 import AuthScreen from './components/AuthScreen';
 import Landing from './pages/Landing';
@@ -8,12 +8,16 @@ import { useTheme } from './context/ThemeContext';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import Toast from './components/Toast';
+import { io } from 'socket.io-client';
 
 // --- Configuration ---
 // Use hosted backend when available. Vite exposes env vars via import.meta.env.VITE_... in the browser.
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL)
   ? import.meta.env.VITE_API_BASE_URL
   : 'https://universal-clipboard-q6po.onrender.com/api/clipboard';
+
+// Socket.IO server URL (extract base from API_BASE_URL)
+const SOCKET_SERVER_URL = API_BASE_URL.replace('/api/clipboard', '');
 
 // --- Encryption and Decryption Functions ---
 const encryptContent = (content, secretKey) => {
@@ -47,6 +51,7 @@ const Dashboard = ({ showToast }) => {
   const [showConfetti, setShowConfetti] = useState(false); // Confetti animation trigger
   const encryptionKey = "SecureMasterKeyFromUserPassword"; 
   const MAX_DISPLAY_LENGTH = 70; // Max characters to show in history before truncation
+  const socketRef = useRef(null); // Socket.IO connection reference
 
   // TTL options in seconds
   const TTL_OPTIONS = {
@@ -99,6 +104,72 @@ const Dashboard = ({ showToast }) => {
       setStatus(`Error loading history. (${error.response?.data?.message || error.message})`);
     }
   }, [token, encryptionKey]);
+
+  // Socket.IO connection and real-time event listeners
+  useEffect(() => {
+    if (!token) return;
+
+    // Initialize socket connection with JWT authentication
+    const socket = io(SOCKET_SERVER_URL, {
+      auth: {
+        token: token
+      },
+      transports: ['websocket', 'polling']
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('[Socket.IO] Connected to server');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('[Socket.IO] Disconnected from server');
+    });
+
+    // Listen for new clip events
+    socket.on('new_clip', (data) => {
+      console.log('[Socket.IO] Received new_clip event:', data);
+      
+      // Decrypt and add to history
+      const decryptedContent = decryptContent(data.encrypted_data, encryptionKey);
+      if (decryptedContent) {
+        const newClip = {
+          id: data.id,
+          encrypted_data: data.encrypted_data,
+          decrypted_content: decryptedContent,
+          created_at: data.created_at,
+          display_date: new Date(data.created_at).toLocaleTimeString(),
+          expires_at_ts: data.expires_at ? Date.parse(data.expires_at) : null,
+        };
+        
+        setHistory(prevHistory => [newClip, ...prevHistory]);
+        
+        // Show toast notification
+        if (typeof showToast === 'function') {
+          showToast('New clip received!', 'success');
+        }
+      }
+    });
+
+    // Listen for clip deleted events
+    socket.on('clip_deleted', (data) => {
+      console.log('[Socket.IO] Received clip_deleted event:', data);
+      
+      setHistory(prevHistory => prevHistory.filter(item => String(item.id) !== String(data.id)));
+      
+      // Show toast notification
+      if (typeof showToast === 'function') {
+        showToast('Clip deleted on another device', 'info');
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [token, encryptionKey, showToast]);
 
   // If the user just logged in, show a brief success status once
   useEffect(() => {
