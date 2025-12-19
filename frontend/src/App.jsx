@@ -362,7 +362,7 @@ const Dashboard = ({ showToast }) => {
     color: isDark ? '#e6eef8' : '#111' 
   }}>
   <div className="header-row" style={styles.headerRow}>
-    <h1 className="app-title pop-in gradient-text" style={styles.header}>Universal Clipboard</h1>
+    <h1 className="app-title pop-in gradient-text">Universal Clipboard</h1>
     <div className="header-controls" style={{ marginLeft: 'auto', display: 'flex', gap: 16, alignItems: 'center' }}>
       {/* Theme toggle inline in header so it lines up with the profile avatar */}
       <ThemeToggle />
@@ -944,15 +944,20 @@ const styles = {
     textAlign: 'center', 
     margin: '0',
     fontSize: '2.5rem',
-    display: 'block'
+    display: 'block',
+    minWidth: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'visible'
   },
   headerRow: { 
     display: 'flex', 
     alignItems: 'center', 
+    justifyContent: 'space-between',
     gap: 16, 
     marginBottom: '32px',
     paddingBottom: '24px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    width: '100%'
   },
   loggedIn: { fontWeight: '700', marginBottom: '30px', textAlign: 'center' },
   sectionBox: { 

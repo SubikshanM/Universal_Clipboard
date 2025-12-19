@@ -35,26 +35,32 @@ body.dark-mode strong {
 
 /* Gradient text styling for app title */
 .app-title {
-  display: block;
+  display: block !important;
   width: 100%;
   text-align: center;
-  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #6366f1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4);
+  background-size: 200% auto;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
   -moz-background-clip: text;
   -moz-text-fill-color: transparent;
-  background-clip: text;
+  background-clip: text !important;
   font-weight: 800;
   letter-spacing: -0.02em;
+  visibility: visible !important;
+  opacity: 1 !important;
+  animation: gradientFlow 3s linear infinite;
 }
 
 body.dark-mode .app-title {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4);
+  background-size: 200% auto;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
   -moz-background-clip: text;
   -moz-text-fill-color: transparent;
-  background-clip: text;
+  background-clip: text !important;
+  animation: gradientFlow 3s linear infinite;
 }
 
 /* Make common text and muted text readable in dark mode */
@@ -1855,6 +1861,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 }
 
 .gradient-text {
+  color: #3b82f6; /* Fallback color */
   background: linear-gradient(
     90deg,
     #06b6d4,
@@ -1866,8 +1873,11 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  -moz-background-clip: text;
+  -moz-text-fill-color: transparent;
   background-clip: text;
   animation: gradientText 3s linear infinite;
+  display: inline-block;
 }
 
 /* Holographic card effect */
