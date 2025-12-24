@@ -3,6 +3,7 @@ import axios from 'axios';
 // ThemeToggle moved to fixed global position in App.jsx
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import TermsModal from './TermsModal';
 
 // AuthScreen handles Login, Signup (OTP) and Password Reset (OTP) flows
 export default function AuthScreen({ initialMode = 'login' }) {
@@ -37,6 +38,9 @@ export default function AuthScreen({ initialMode = 'login' }) {
   const [submitState, setSubmitState] = useState('idle');
   const [resendCooldown, setResendCooldown] = useState(0);
   const resendTimerRef = useRef(null);
+  // Terms modal + consent state for signup final step
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
   // Removed entrance animation to keep auth panel static on landing page
 
   useEffect(() => {
@@ -258,8 +262,11 @@ export default function AuthScreen({ initialMode = 'login' }) {
   };
 
   // UI rendering
+  const isSignupFinal = !isLogin && signupStep === 'enterPassword';
+
   return (
     <div className="auth-wrapper" style={{ ...styles.wrapper, backgroundColor: isDark ? '#071224' : styles.wrapper.backgroundColor, position: 'relative' }}>
+      <TermsModal open={isTermsOpen} onClose={() => setIsTermsOpen(false)} onAccept={() => { setConsentAccepted(true); setIsTermsOpen(false); }} />
       <div aria-hidden className="auth-bg" />
   <div className={"auth-card"} style={{ ...styles.card, zIndex: 1 }}>
         <h2 style={{ ...styles.header, color: isDark ? '#e6eef8' : styles.header.color }}>
@@ -360,6 +367,16 @@ export default function AuthScreen({ initialMode = 'login' }) {
                     />
                     <button type="button" onClick={() => setShowSignupConfirmPassword(s => !s)} aria-pressed={showSignupConfirmPassword} aria-label={showSignupConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} style={{ ...styles.pwdToggle, background: 'none', border: 'none' }}>{showSignupConfirmPassword ? 'Hide' : 'Show'}</button>
                   </div>
+                  {/* Terms & Conditions: open modal and accept to enable signup */}
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ fontSize: 13, color: isDark ? '#cfe8ff' : '#333' }}>
+                      <button type="button" onClick={() => setIsTermsOpen(true)} style={{ ...styles.switchButton, padding: 0 }}>Read Terms & Conditions</button>
+                      <span style={{ marginLeft: 8 }}>{consentAccepted ? ' — accepted' : ''}</span>
+                    </div>
+                    {!consentAccepted && (
+                      <div style={{ fontSize: 13, color: '#b33' }}>You must accept to enable Signup</div>
+                    )}
+                  </div>
                 </>
               )
             )
@@ -416,7 +433,7 @@ export default function AuthScreen({ initialMode = 'login' }) {
           )}
 
           {!(isResetFlow && resetStep === 'enterOtp') && (
-            <button type="submit" disabled={loading || submitState === 'loading'} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
+            <button type="submit" disabled={loading || submitState === 'loading' || (isSignupFinal && !consentAccepted)} className={`btn btn-primary submit-btn ${submitState === 'loading' ? 'loading' : ''} ${submitState === 'success' ? 'success' : ''}`} style={{ ...styles.button, padding: '10px 16px' }} aria-live="polite">
               <span className="btn-inner">
                 <span className="btn-label">{isResetFlow ? (resetStep === 'enterEmail' ? 'Send OTP' : (resetStep === 'enterNewPassword' ? 'Reset Password' : '')) : (isLogin ? 'Login' : (signupStep === 'enterEmail' || signupStep === 'enterDetails' ? 'Send OTP' : (signupStep === 'enterOtp' ? 'Verify OTP' : 'Signup')))}</span>
                 <svg className="btn-check" viewBox="0 0 24 24" aria-hidden>
