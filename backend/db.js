@@ -136,6 +136,31 @@ async function createTables() {
     );
   `;
 
+  // Table to track user devices and their online status
+  const createDevices = `
+    CREATE TABLE IF NOT EXISTS devices (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      device_name VARCHAR(255) NOT NULL,
+      device_type VARCHAR(50),
+      browser VARCHAR(100),
+      os VARCHAR(100),
+      ip_address VARCHAR(45),
+      socket_id VARCHAR(255),
+      last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      is_online BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createDevicesIndex = `
+    CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices (user_id);
+  `;
+
+  const createDevicesOnlineIndex = `
+    CREATE INDEX IF NOT EXISTS idx_devices_online ON devices (user_id, is_online);
+  `;
+
   try {
     // Use the pool to run the queries sequentially
   await pool.query(createUsers);
@@ -143,7 +168,10 @@ async function createTables() {
   await pool.query(createSignupOtps);
   await pool.query(createSignupOtpOutbox);
   await pool.query(createPasswordResetOtps);
+  await pool.query(createDevices);
   await pool.query(createSignupOtpsIndex);
+  await pool.query(createDevicesIndex);
+  await pool.query(createDevicesOnlineIndex);
     console.log('Database tables are ready.');
   } catch (err) {
     console.error('Error creating tables:', err);

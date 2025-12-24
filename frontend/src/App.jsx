@@ -4,6 +4,7 @@ import AuthScreen from './components/AuthScreen';
 import Landing from './pages/Landing';
 import ProfileDropdown from './components/ProfileDropdown';
 import ThemeToggle from './components/ThemeToggle';
+import Devices from './components/Devices';
 import { useTheme } from './context/ThemeContext';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
@@ -39,6 +40,7 @@ const Dashboard = ({ showToast }) => {
   const { user, token, logout } = useAuth();
   const { isDark } = useTheme();
   
+  const [activeTab, setActiveTab] = useState('clipboard'); // 'clipboard' or 'devices'
   const [status, setStatus] = useState('Ready to send data.');
   const [statusLockUntil, setStatusLockUntil] = useState(0); // ms timestamp to avoid status overrides (used after login)
   const [inputText, setInputText] = useState(''); 
@@ -109,11 +111,56 @@ const Dashboard = ({ showToast }) => {
   useEffect(() => {
     if (!token) return;
 
-    // Initialize socket connection with JWT authentication
+    // Get device information
+    const getDeviceInfo = () => {
+      const userAgent = navigator.userAgent;
+      let deviceType = 'Desktop';
+      let browser = 'Unknown';
+      let os = 'Unknown';
+
+      // Detect device type
+      if (/mobile/i.test(userAgent)) deviceType = 'Mobile';
+      else if (/tablet/i.test(userAgent)) deviceType = 'Tablet';
+
+      // Detect browser
+      if (userAgent.indexOf('Chrome') > -1) browser = 'Chrome';
+      else if (userAgent.indexOf('Safari') > -1) browser = 'Safari';
+      else if (userAgent.indexOf('Firefox') > -1) browser = 'Firefox';
+      else if (userAgent.indexOf('Edge') > -1) browser = 'Edge';
+
+      // Detect OS
+      if (userAgent.indexOf('Win') > -1) os = 'Windows';
+      else if (userAgent.indexOf('Mac') > -1) os = 'macOS';
+      else if (userAgent.indexOf('Linux') > -1) os = 'Linux';
+      else if (userAgent.indexOf('Android') > -1) os = 'Android';
+      else if (userAgent.indexOf('iOS') > -1) os = 'iOS';
+
+      const deviceName = `${browser} on ${os}`;
+      
+      return { deviceName, deviceType, browser, os };
+    };
+
+    const deviceInfo = getDeviceInfo();
+
+    // Register device with backend
+    const registerDevice = async () => {
+      try {
+        await axios.post(`${API_BASE_URL.replace('/clipboard', '/devices')}/register`, deviceInfo, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.error('[Device] Failed to register device:', err);
+      }
+    };
+
+    registerDevice();
+
+    // Initialize socket connection with JWT authentication and device info
     const socket = io(SOCKET_SERVER_URL, {
       auth: {
         token: token
       },
+      query: deviceInfo,
       transports: ['websocket', 'polling']
     });
 
@@ -369,6 +416,49 @@ const Dashboard = ({ showToast }) => {
       <ProfileDropdown />
     </div>
   </div>
+
+  {/* Tab Navigation */}
+  <div style={{ display: 'flex', gap: 8, marginTop: 16, borderBottom: `2px solid ${isDark ? '#334155' : '#e2e8f0'}` }}>
+    <button
+      onClick={() => setActiveTab('clipboard')}
+      style={{
+        padding: '12px 24px',
+        background: 'none',
+        border: 'none',
+        borderBottom: activeTab === 'clipboard' ? `3px solid #667eea` : '3px solid transparent',
+        color: activeTab === 'clipboard' ? '#667eea' : (isDark ? '#94a3b8' : '#64748b'),
+        fontWeight: activeTab === 'clipboard' ? 600 : 400,
+        cursor: 'pointer',
+        fontSize: '15px',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      📋 Clipboard
+    </button>
+    <button
+      onClick={() => setActiveTab('devices')}
+      style={{
+        padding: '12px 24px',
+        background: 'none',
+        border: 'none',
+        borderBottom: activeTab === 'devices' ? `3px solid #667eea` : '3px solid transparent',
+        color: activeTab === 'devices' ? '#667eea' : (isDark ? '#94a3b8' : '#64748b'),
+        fontWeight: activeTab === 'devices' ? 600 : 400,
+        cursor: 'pointer',
+        fontSize: '15px',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      💻 Devices
+    </button>
+  </div>
+
+  {/* Show Devices component when devices tab is active */}
+  {activeTab === 'devices' ? (
+    <Devices socket={socketRef.current} />
+  ) : (
+    <>
+      {/* Original Clipboard UI */}
       
       {/* 1. SEND (PUSH) SECTION */}
   <div className="section-box holographic glass-reflect" style={{ 
@@ -911,6 +1001,9 @@ const Dashboard = ({ showToast }) => {
           </div>
         </div>
       )}
+      
+      </>
+  )}
       
       </div>
     </div>

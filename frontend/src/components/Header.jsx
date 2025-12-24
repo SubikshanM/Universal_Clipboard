@@ -53,7 +53,7 @@ export default function Header({ onChangeMode }) {
 }
 
 const styles = {
-  header: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 28px', maxWidth: '1200px', margin: '0 auto' },
+  header: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 28px', maxWidth: '1200px', margin: '0 auto', zIndex: 100 },
   left: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
   logoRow: { display: 'flex', alignItems: 'center', gap: 16 },
     logoImg: { width: 64, height: 64, objectFit: 'contain', borderRadius: 10, boxShadow: '0 8px 26px rgba(12,20,40,0.08)', background: '#fff' },
@@ -64,7 +64,7 @@ const styles = {
   // (not constrained by the header's centered container). This puts it at the
   // leftmost side of the page even when the header content is centered.
   // Position the fixed logo to align with the header's top padding so it moves up with the header area
-  logoAbsolute: { position: 'fixed', left: 8, top: 20, transform: 'none', zIndex: 9999 },
+  logoAbsolute: { position: 'fixed', left: 8, top: 20, transform: 'none', zIndex: 100 },
   centerRow: { display: 'flex', alignItems: 'center', gap: 24, width: '100%', justifyContent: 'center', position: 'relative' },
   tagline: { fontSize: 14, color: 'rgba(0,0,0,0.55)' },
   nav: { display: 'flex', gap: 12, alignItems: 'center', position: 'absolute', right: '-392px', top: '50%', transform: 'translateY(-50%)' },

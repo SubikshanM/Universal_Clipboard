@@ -7,6 +7,7 @@ const db = require('./db');
 const cors = require('cors'); // NEW: Import CORS middleware
 const authRoutes = require('./routes/auth');
 const clipboardRoutes = require('./routes/clipboard');
+const devicesRoutes = require('./routes/devices');
 
 const app = express();
 const server = http.createServer(app);
@@ -92,7 +93,7 @@ app.use(cors({
 app.use(express.json());
 
 // --- Socket.IO Authentication & Room Management ---
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log('[Socket.IO] Client attempting to connect:', socket.id);
 
     // Authenticate socket connection using JWT
@@ -112,10 +113,43 @@ io.on('connection', (socket) => {
         const userRoom = `user:${userId}`;
         socket.join(userRoom);
         
+        // Update device status to online
+        const deviceInfo = socket.handshake.query;
+        if (deviceInfo.deviceName) {
+            try {
+                await db.query(
+                    `UPDATE devices 
+                     SET socket_id = $1, is_online = true, last_seen = NOW()
+                     WHERE user_id = $2 AND device_name = $3`,
+                    [socket.id, userId, deviceInfo.deviceName]
+                );
+                
+                // Notify all devices about the updated device list
+                io.to(userRoom).emit('devices-updated');
+            } catch (err) {
+                console.error('[Socket.IO] Error updating device status:', err.message);
+            }
+        }
+        
         console.log(`[Socket.IO] User ${userId} connected and joined room: ${userRoom}`);
         
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             console.log(`[Socket.IO] User ${userId} disconnected`);
+            
+            // Update device status to offline
+            try {
+                await db.query(
+                    `UPDATE devices 
+                     SET socket_id = NULL, is_online = false, last_seen = NOW()
+                     WHERE socket_id = $1`,
+                    [socket.id]
+                );
+                
+                // Notify remaining devices about the updated device list
+                io.to(userRoom).emit('devices-updated');
+            } catch (err) {
+                console.error('[Socket.IO] Error updating device status on disconnect:', err.message);
+            }
         });
         
     } catch (error) {
@@ -135,7 +169,10 @@ app.use('/api/auth', authRoutes);
 // 2. Clipboard Routes
 app.use('/api/clipboard', clipboardRoutes); 
 
-// 3. Basic test route
+// 3. Devices Routes
+app.use('/api/devices', devicesRoutes);
+
+// 4. Basic test route
 app.get('/', (req, res) => {
     res.send('Universal Clipboard API is running...');
 });
