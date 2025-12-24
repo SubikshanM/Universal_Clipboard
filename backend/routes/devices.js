@@ -153,4 +153,24 @@ router.put('/:id/rename', authMiddleware, async (req, res) => {
     }
 });
 
+// POST /api/devices/disconnect - Mark device offline when user logs out
+router.post('/disconnect', authMiddleware, async (req, res) => {
+    const userId = req.user.id;
+    const { deviceName } = req.body;
+
+    try {
+        await db.query(
+            `UPDATE devices 
+             SET is_online = false, socket_id = NULL, last_seen = NOW()
+             WHERE user_id = $1 AND device_name = $2`,
+            [userId, deviceName]
+        );
+
+        res.json({ message: 'Device disconnected successfully' });
+    } catch (err) {
+        console.error('Error disconnecting device:', err);
+        res.status(500).json({ error: 'Failed to disconnect device' });
+    }
+});
+
 module.exports = router;
