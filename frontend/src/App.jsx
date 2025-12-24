@@ -37,7 +37,15 @@ const decryptContent = (encryptedContent, secretKey) => {
 // --- Clipboard Dashboard Component (Manual Mode with History) ---
 
 const Dashboard = ({ showToast }) => {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout: authLogout } = useAuth();
+  
+  const logout = () => {
+    // Disconnect socket before logging out
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+    authLogout();
+  };
   const { isDark } = useTheme();
   
   const [activeTab, setActiveTab] = useState('clipboard'); // 'clipboard' or 'devices'

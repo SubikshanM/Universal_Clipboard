@@ -96,20 +96,21 @@
 
 .device-name {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 4px 0;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .device-details {
-  font-size: 13px;
-  color: #64748b;
+  font-size: 14px;
+  color: #1e293b;
   margin: 0;
+  font-weight: 600;
 }
 
 .device-last-seen {
   font-size: 12px;
-  color: #94a3b8;
+  color: #475569;
   margin: 4px 0 0 0;
 }
 
@@ -184,11 +185,15 @@
   }
 
   .device-name {
-    color: #f1f5f9;
+    color: #f1f5f9 !important;
   }
 
   .device-details {
-    color: #94a3b8;
+    color: #e2e8f0 !important;
+  }
+
+  .device-last-seen {
+    color: #cbd5e1 !important;
   }
 
   .device-action-btn {

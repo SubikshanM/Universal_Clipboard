@@ -61,7 +61,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Disconnect device before logging out
+    if (token) {
+      try {
+        // Get device info
+        const userAgent = navigator.userAgent;
+        let browser = 'Unknown';
+        let os = 'Unknown';
+
+        if (userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edg') === -1) browser = 'Chrome';
+        else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') === -1) browser = 'Safari';
+        else if (userAgent.indexOf('Firefox') > -1) browser = 'Firefox';
+        else if (userAgent.indexOf('Edg') > -1) browser = 'Edge';
+
+        if (userAgent.indexOf('Win') > -1) os = 'Windows';
+        else if (userAgent.indexOf('Mac') > -1 && userAgent.indexOf('iPhone') === -1 && userAgent.indexOf('iPad') === -1) os = 'macOS';
+        else if (userAgent.indexOf('Linux') > -1 && userAgent.indexOf('Android') === -1) os = 'Linux';
+        else if (userAgent.indexOf('Android') > -1) os = 'Android';
+        else if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1 || userAgent.indexOf('iPod') > -1) os = 'iOS';
+
+        const deviceName = `${browser} on ${os}`;
+        
+        // Call disconnect API
+        const devicesUrl = API_URL.replace('/auth', '/devices');
+        await axios.post(`${devicesUrl}/disconnect`, { deviceName }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.error('Failed to disconnect device:', err);
+      }
+    }
+    
     // Clear user-specific theme preference before logging out
     if (user && user.email) {
       const themeKey = `theme_${user.email}`;
