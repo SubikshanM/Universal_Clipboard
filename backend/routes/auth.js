@@ -443,7 +443,7 @@ router.post('/verify-signup-otp', async (req, res) => {
 // POST /api/auth/complete-signup
 // Finalize signup by verifying OTP and creating the user with the supplied password.
 router.post('/complete-signup', async (req, res) => {
-    const { email, otp, password, username } = req.body || {};
+    const { email, otp, password, username, termsAcceptedAt } = req.body || {};
     if (!email || !otp || !password) return res.status(400).json({ error: 'Email, OTP and password are required.' });
 
     try {
@@ -471,9 +471,10 @@ router.post('/complete-signup', async (req, res) => {
 
         // Hash the supplied password and create the user record
         const passwordHash = await bcrypt.hash(password, saltRounds);
+        const termsTimestamp = termsAcceptedAt ? new Date(termsAcceptedAt) : new Date();
         const insertRes = await db.query(
-            'INSERT INTO users (email, password_hash, username) VALUES ($1, $2, $3) RETURNING id',
-            [email, passwordHash, username || otpRow.username || null]
+            'INSERT INTO users (email, password_hash, username, terms_accepted_at) VALUES ($1, $2, $3, $4) RETURNING id',
+            [email, passwordHash, username || otpRow.username || null, termsTimestamp]
         );
 
         // Mark the OTP record used

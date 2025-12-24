@@ -41,6 +41,7 @@ export default function AuthScreen({ initialMode = 'login' }) {
   // Terms modal + consent state for signup final step
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
+  const [termsAcceptedAt, setTermsAcceptedAt] = useState(null);
   // Removed entrance animation to keep auth panel static on landing page
 
   useEffect(() => {
@@ -238,8 +239,8 @@ export default function AuthScreen({ initialMode = 'login' }) {
           return;
         }
 
-        // Complete signup by sending password + otp
-  await axios.post(`${API_URL}/complete-signup`, { email, otp, password, username });
+        // Complete signup by sending password + otp + terms acceptance timestamp
+  await axios.post(`${API_URL}/complete-signup`, { email, otp, password, username, termsAcceptedAt });
     // Use the user's requested success message
     setNotice({ type: 'success', text: 'Signup successful — welcome to Universal Clipboard' });
     try { if (window.__showToast) window.__showToast('Signup successful — welcome to Universal Clipboard', 'success'); } catch (e) {}
@@ -266,7 +267,7 @@ export default function AuthScreen({ initialMode = 'login' }) {
 
   return (
     <div className="auth-wrapper" style={{ ...styles.wrapper, backgroundColor: isDark ? '#071224' : styles.wrapper.backgroundColor, position: 'relative' }}>
-      <TermsModal open={isTermsOpen} onClose={() => setIsTermsOpen(false)} onAccept={() => { setConsentAccepted(true); setIsTermsOpen(false); }} />
+      <TermsModal open={isTermsOpen} onClose={() => setIsTermsOpen(false)} onAccept={() => { setConsentAccepted(true); setTermsAcceptedAt(new Date().toISOString()); setIsTermsOpen(false); }} />
       <div aria-hidden className="auth-bg" />
   <div className={"auth-card"} style={{ ...styles.card, zIndex: 1 }}>
         <h2 style={{ ...styles.header, color: isDark ? '#e6eef8' : styles.header.color }}>
