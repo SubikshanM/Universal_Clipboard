@@ -118,22 +118,30 @@ const Dashboard = ({ showToast }) => {
       let browser = 'Unknown';
       let os = 'Unknown';
 
-      // Detect device type
-      if (/mobile/i.test(userAgent)) deviceType = 'Mobile';
-      else if (/tablet/i.test(userAgent)) deviceType = 'Tablet';
+      // Detect device type - improved detection
+      if (/iPhone|iPad|iPod/i.test(userAgent)) {
+        deviceType = /iPad/i.test(userAgent) ? 'Tablet' : 'Mobile';
+      } else if (/Android/i.test(userAgent)) {
+        deviceType = /Mobile/i.test(userAgent) ? 'Mobile' : 'Tablet';
+      } else if (/tablet|ipad/i.test(userAgent)) {
+        deviceType = 'Tablet';
+      } else if (/mobile|phone|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+        deviceType = 'Mobile';
+      }
 
       // Detect browser
-      if (userAgent.indexOf('Chrome') > -1) browser = 'Chrome';
-      else if (userAgent.indexOf('Safari') > -1) browser = 'Safari';
+      if (userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edg') === -1) browser = 'Chrome';
+      else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') === -1) browser = 'Safari';
       else if (userAgent.indexOf('Firefox') > -1) browser = 'Firefox';
-      else if (userAgent.indexOf('Edge') > -1) browser = 'Edge';
+      else if (userAgent.indexOf('Edg') > -1) browser = 'Edge';
+      else if (userAgent.indexOf('Opera') > -1 || userAgent.indexOf('OPR') > -1) browser = 'Opera';
 
       // Detect OS
       if (userAgent.indexOf('Win') > -1) os = 'Windows';
-      else if (userAgent.indexOf('Mac') > -1) os = 'macOS';
-      else if (userAgent.indexOf('Linux') > -1) os = 'Linux';
+      else if (userAgent.indexOf('Mac') > -1 && userAgent.indexOf('iPhone') === -1 && userAgent.indexOf('iPad') === -1) os = 'macOS';
+      else if (userAgent.indexOf('Linux') > -1 && userAgent.indexOf('Android') === -1) os = 'Linux';
       else if (userAgent.indexOf('Android') > -1) os = 'Android';
-      else if (userAgent.indexOf('iOS') > -1) os = 'iOS';
+      else if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1 || userAgent.indexOf('iPod') > -1) os = 'iOS';
 
       const deviceName = `${browser} on ${os}`;
       

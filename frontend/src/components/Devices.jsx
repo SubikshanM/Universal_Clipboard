@@ -82,6 +82,7 @@ export default function Devices({ socket }) {
     switch (deviceType?.toLowerCase()) {
       case 'mobile': return '📱';
       case 'tablet': return '📱';
+      case 'desktop': return '💻';
       default: return '💻';
     }
   };
